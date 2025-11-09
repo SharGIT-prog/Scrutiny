@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickFix | Scrutiny Data Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    
+    <style>
+        /* ====== Scrutiny — Professional Turquoise Theme (Light, flat) ====== */
+        :root{
+            --primary: #21917b;
+            --primary-2: #5eb1a0;
+            --primary-3: #78a39c;
+            --bg: #d8eeeb;
+            --card: #ffffff;
+            --text: #000000;
+            --muted: #536a66;
+            --shadow: rgba(33,145,123,0.12);
+            --round: 12px;
+            --focus-ring: rgba(94,177,160,0.22);
+        }
+
+        /* ====== Base ====== */
+        * { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; font-family: 'Poppins', sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-size: 16px;
+            line-height: 1.4;
+            -webkit-font-smoothing:antialiased;
+            transition: background-color .2s ease, color .2s ease;
+        }
+
+        @keyframes pageFade {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ====== Navbar ====== */
+        nav {
+            background: var(--card);
+            padding: 14px 28px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 6px 18px var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+
+        nav .logo { font-weight:700; color:var(--primary-3); font-size:20px; }
+        nav .nav-links button { 
+            margin-left:10px; background: transparent; border: 1px solid rgba(0,0,0,0.08);
+            color: var(--text); padding:8px 12px; border-radius:8px; cursor:pointer;
+        }
+        nav .nav-links button:hover {
+            background: var(--primary);
+            color: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 22px rgba(33,145,123,0.12);
+        }
+
+        /* ====== Buttons/CTA ====== */
+        .action-btn {
+            padding:12px 28px; border-radius:10px; border:none;
+            background: var(--primary); color: #fff; font-weight:700; cursor:pointer;
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+        .action-btn:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(33,145,123,0.14); }
+        .primary-btn {
+            background: var(--primary);
+        }
+        
+        /* ====== Cards / Panels ====== */
+        .card, .stats-card, .plot-card { 
+            background: var(--card);
+            border-radius: var(--round);
+            padding: 18px;
+            border: 1px solid rgba(0,0,0,0.04);
+            box-shadow: 0 10px 30px var(--shadow);
+            animation: pageFade .36s ease both;
+        }
+        .stats-card, .plot-card { padding: 30px; } 
+
+        /* ====== Form controls (Used for file input/select) ====== */
+        input, textarea, select {
+            width:100%;
+            padding:10px 12px;
+            border-radius:8px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: var(--card);
+            color: var(--text);
+            outline:none;
+            transition: box-shadow .12s ease, border-color .12s ease, transform .08s ease;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            box-shadow: 0 8px 20px var(--focus-ring);
+            border-color: var(--primary-2);
+            transform: translateY(-1px);
+        }
+
+        /* footer */
+        footer { text-align:center; padding:18px 10px; color:var(--muted); }
+
+
+        /* ============================================== */
+        /* ====== QuickFix Analysis Page Specifics ====== */
+        /* ============================================== */
+
+        /* Main Analysis Layout */
+        .analysis-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            animation: pageFade .5s ease both;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header-section h1 {
+            color: var(--primary); 
+            font-weight: 700;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+
+        .header-section p {
+            color: var(--muted);
+            font-size: 1.05rem;
+        }
+
+        /* Upload and Controls Layout */
+        .upload-controls-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 30px;
+            background: var(--card);
+            border-radius: var(--round);
+            box-shadow: 0 8px 25px var(--shadow);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .upload-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Custom File Input Styling */
+        .file-input {
+            padding: 10px 14px;
+            border: 1px solid var(--primary-3);
+            border-radius: var(--round);
+            background-color: var(--bg); 
+            color: var(--text);
+            width: auto; 
+            max-width: 300px; 
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+        .file-input:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 10px rgba(33,145,123,0.1);
+        }
+
+        /* Primary Analysis Button (Action Button) */
+        #analyzeButton {
+            padding: 10px 24px;
+            height: 44px; 
+            font-size: 1rem;
+        }
+
+        /* Plot Controls Styling (Dropdowns) */
+        .plot-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background-color: transparent; 
+            padding: 0;
+            border-radius: var(--round);
+        }
+
+        .plot-controls label {
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 0;
+            font-size:0.95rem; 
+        }
+
+        .control-select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+            background-color: var(--bg);
+            color: var(--text);
+            cursor: pointer;
+            transition: border-color .15s ease;
+            width: 150px; 
+        }
+
+        .control-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--focus-ring);
+        }
+
+
+        /* Results Area (Grid and Cards) */
+        .results-area {
+            display: grid;
+            grid-template-columns: 1fr 2fr; 
+            gap: 24px;
+        }
+
+        .stats-card h2, .plot-card h2 {
+            color: var(--primary);
+            margin-top: 0;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .stats-card p {
+            margin: 8px 0;
+            font-size: 0.98rem;
+            color: var(--text);
+        }
+
+        .stats-card strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Chart Canvas Styling */
+        #myChart {
+            max-height: 450px; 
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 900px) {
+            .results-area {
+                grid-template-columns: 1fr; 
+            }
+            .upload-controls-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            .plot-controls {
+                width: 100%;
+                flex-wrap: wrap;
+                padding: 0;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">Scrutiny</div>
+    <div class="nav-links">
+        <button class="nav-btn" onclick="location.href='index.html'">Home</button>
+        <button class="nav-btn" onclick="location.href='login.html'">Login</button>
+        <button class="nav-btn" onclick="location.href='signup.html'">Signup</button>
+        <button class="nav-btn" onclick="location.href='contact.html'">Contact Us</button>
+    </div>
+</nav>
+
+<main class="analysis-container">
+    <header class="header-section">
+        <h1>QuickFix Data Analysis ⚡</h1>
+        <p>Upload your CSV file below for instant statistical insights and dynamic plotting.</p>
+    </header>
+
+    <section class="upload-controls-section">
+        <div class="upload-box">
+            <input type="file" id="csvFileInput" accept=".csv" class="file-input">
+            <button id="analyzeButton" class="action-btn primary-btn" onclick="analyzeData()">Analyze CSV</button>
+        </div>
+        
+        <div class="plot-controls" id="plotControls" style="display: none;">
+            <label for="plotTypeSelect">Plot Type:</label>
+            <select id="plotTypeSelect" class="control-select" onchange="renderPlot()">
+                <option value="bar">Bar Chart (Distribution)</option>
+                <option value="line">Line Chart (Trend)</option>
+                <option value="scatter">Scatter Plot (Relationship)</option>
+            </select>
+
+            <label for="columnSelect">Column:</label>
+            <select id="columnSelect" class="control-select" onchange="renderPlot()">
+                </select>
+        </div>
+    </section>
+
+    <section class="results-area">
+        <div id="statsOutput" class="stats-card">
+            <h2>Summary Statistics</h2>
+            <p>Upload a file to begin analysis.</p>
+            </div>
+
+        <div id="plotArea" class="plot-card" style="display: none;">
+            <h2>Data Visualization</h2>
+            <canvas id="myChart"></canvas>
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <p>© Team Scrutiny | 2025</p>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // Global variables for analysis results and chart instance
+        let globalAnalysisResults = {};
+        let myChart = null;
+        
+        // Theme Color Variables
+        const primaryChartColor = '#21917b'; 
+        const primaryChartColorAlpha = 'rgba(33, 145, 123, 0.8)'; 
+
+        /**
+         * The main function to send the CSV file to the backend API for analysis.
+         */
+        window.analyzeData = async function() { 
+            const fileInput = document.getElementById('csvFileInput');
+            const file = fileInput.files[0];
+            const statsOutput = document.getElementById('statsOutput');
+            const plotArea = document.getElementById('plotArea');
+            const columnSelect = document.getElementById('columnSelect');
+            const plotControls = document.getElementById('plotControls');
+
+            if (!file) {
+                alert('Please select a CSV file.');
+                return;
+            }
+
+            // 1. Setup Request and UI
+            const formData = new FormData();
+            formData.append('file', file); 
+
+            statsOutput.innerHTML = '<h2>Analyzing... 🚀</h2><p>Please wait, uploading and processing data on the server...</p>';
+            plotArea.style.display = 'none';
+            plotControls.style.display = 'none';
+
+            try {
+                // 2. Send request to your live Express backend on port 5000
+                const response = await fetch('http://localhost:5000/api/analyze', { 
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorMessage = `Server analysis failed with status ${response.status}.`;
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.error || errorMessage;
+                    } catch (e) {
+                        errorMessage = errorText;
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                // 3. Process the real analysis results
+                const analysisResults = await response.json();
+                globalAnalysisResults = analysisResults; 
+                
+                // Find the first numerical column for initial stats display
+                const numericalColumn = analysisResults.columns.find(col => analysisResults.stats[col]);
+                const numericalStats = numericalColumn ? analysisResults.stats[numericalColumn] : null;
+
+                // 4. Update Stats Output
+                if (numericalStats) {
+                    // Conditional styling for profit status
+                    const profitColor = numericalStats.profit_status.includes('Positive') ? 'var(--primary)' : '#d04545';
+                    statsOutput.innerHTML = `
+                        <h2>Summary Statistics</h2>
+                        <p><strong>Total Records:</strong> ${analysisResults.recordCount}</p>
+                        <h3>${numericalColumn} Metrics</h3>
+                        <p><strong>Mean ${numericalColumn}:</strong> ${numericalStats.mean.toFixed(2)}</p>
+                        <p><strong>Median ${numericalColumn}:</strong> ${numericalStats.median.toFixed(2)}</p>
+                        <p><strong>Mode ${numericalColumn}:</strong> ${numericalStats.mode}</p>
+                        <p><strong>Profit Status:</strong> <span style="color: ${profitColor};"><strong>${numericalStats.profit_status}</strong></span></p>
+                        <p><strong>Overall Trend:</strong> ${numericalStats.trend}</p> 
+                    `;
+                } else {
+                     statsOutput.innerHTML = `<h2>Summary Statistics</h2><p>Analysis complete. Found ${analysisResults.recordCount} records, but no numerical columns for standard metrics were detected.</p>`;
+                }
+
+
+                // 5. Populate Column Selector (FIXED: Includes all columns)
+                const allColumns = analysisResults.columns;
+                columnSelect.innerHTML = allColumns
+                    .map(col => `<option value="${col}">${col}</option>`)
+                    .join('');
+
+
+                // 6. Show Controls and Render Plot
+                if (allColumns.length > 0) {
+                    plotControls.style.display = 'flex';
+                    plotArea.style.display = 'block';
+                    
+                    columnSelect.value = allColumns[0]; 
+                    renderPlot();
+                } else {
+                    plotArea.style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('Front-end analysis integration error:', error);
+                statsOutput.innerHTML = `<h2>Analysis Failed 🛑</h2><p>Error: ${error.message}</p><p>Please ensure your Node.js server is running on port 5000 and check its console for details.</p>`;
+            }
+        };
+
+        /**
+         * Renders the Chart.js plot based on selected column and type.
+         * FIXED: Now handles both numerical (showing N/A for 1D plots) and categorical columns.
+         */
+        window.renderPlot = function() { 
+            if (myChart) {
+                myChart.destroy(); 
+            }
+            
+            const column = document.getElementById('columnSelect').value;
+            const plotType = document.getElementById('plotTypeSelect').value;
+            const ctx = document.getElementById('myChart').getContext('2d');
+            
+            // Check if the column is numerical (has stats)
+            const isNumerical = globalAnalysisResults.stats[column] !== undefined;
+            
+            let labels;
+            let counts;
+
+            if (isNumerical) {
+                // If the column is numerical, we don't have binned data for a 1D chart.
+                // Display a fallback message if a numerical column is selected for plotting.
+                labels = ['N/A'];
+                counts = [0]; 
+                
+                // Clear the canvas and show a message
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.font = "16px Poppins";
+                ctx.fillStyle = "var(--muted)";
+                ctx.fillText("Select a Categorical Column (e.g., Department, Gender) for Bar/Line plots.", 10, 50);
+                
+                // If you want a real Scatter Plot of two numerical variables, you need a second dropdown
+                // and logic to grab the raw data for both columns.
+                return;
+
+            } else {
+                // Categorical data (Distribution/Bar Chart is the only sensible default)
+                const plotData = globalAnalysisResults.plotData[column];
+                if (!plotData) return;
+                
+                labels = plotData.map(item => item.category);
+                counts = plotData.map(item => item.count);
+            }
+            
+            // --- Core Dataset Configuration ---
+            const datasetConfig = {
+                label: `Count of ${column}`,
+                data: counts,
+                borderColor: primaryChartColor,
+                borderWidth: plotType === 'line' ? 3 : 1, 
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuad' 
+                }
+            };
+
+            if (plotType === 'bar') {
+                datasetConfig.backgroundColor = primaryChartColorAlpha;
+                datasetConfig.pointRadius = 0; 
+            } else if (plotType === 'line' || plotType === 'scatter') {
+                datasetConfig.backgroundColor = primaryChartColor; 
+                datasetConfig.fill = false;
+                datasetConfig.pointRadius = 5;
+                // Scatter/Line will plot COUNT vs CATEGORY here (using the distribution data)
+            }
+            // --- End Core Dataset Configuration ---
+
+            myChart = new Chart(ctx, {
+                type: plotType === 'scatter' ? 'bar' : plotType, // Fallback scatter to bar since we only have 1D data
+                data: {
+                    labels: labels,
+                    datasets: [datasetConfig]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            title: { display: true, text: 'Count' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' }, 
+                            ticks: { color: 'var(--text)' } 
+                        },
+                        x: {
+                            title: { display: true, text: column },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            ticks: { color: 'var(--text)' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: 'var(--text)' }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Find Users | Scrutiny</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css" />
+    
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="./search.jsx" type="text/babel"></script> 
+    <script src="./FindOpposite.jsx" type="text/babel"></script> 
+</head>
+<body class="bg-overlay-dots">
+    <div id="root">
+    </div>
+
+    <script type="text/babel">
+        // The main component is now loaded from FindOpposite.jsx
+        // This file only needs to render the main component
+        ReactDOM.createRoot(document.getElementById('root')).render(<FindOpposite />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1058 @@
+const { useState, useCallback, useMemo } = React;
+
+const AdvancedSearchFilter = ({ onFilterChange, oppositeRole }) => {
+    const [subRoleFilter, setSubRoleFilter] = useState('');
+    const [specificFilters, setSpecificFilters] = useState({});
+
+    // Define the full set of filter configurations, matching signup.html
+    const ALL_FILTERS = useMemo(() => {
+        // CRITICAL FIX: Determine which set of sub-roles we are SEARCHING FOR
+        const isSearchingForAnalyst = oppositeRole === 'Analyst';
+        
+        // --- Analyst Sub-Role Options (What Enterprise searches for) ---
+        const AnalystSubRoles = [
+            { key: 'Analyst - Agency', label: 'Data Solutions Agency', fields: [
+                { key: 'legal', label: 'Legal Entity', type: 'dropdown', options: ['LLC', 'Pvt', 'Pvt Ltd'] },
+                { key: 'years', label: 'Min Years in Operation', type: 'number_min' },
+                { key: 'pricing', label: 'Pricing Model', type: 'dropdown', options: ['Hourly', 'Fixed', 'Project-Based'] },
+                { key: 'specialization', label: 'Specialization Field', type: 'text' },
+            ]},
+            { key: 'Analyst - Startup', label: 'Growth-stage Startup', fields: [
+                { key: 'team', label: 'Min Team Size', type: 'number_min' },
+                { key: 'legal', label: 'Legal Status', type: 'dropdown', options: ['LLC', 'Pvt', 'Pvt Ltd'] },
+                { key: 'pricing', label: 'Pricing Model', type: 'dropdown', options: ['Hourly', 'Fixed', 'Subscription'] },
+                { key: 'specialization', label: 'Specialization Field', type: 'text' },
+            ]},
+            { key: 'Analyst - Expert', label: 'Independent Expert', fields: [
+                { key: 'timing', label: 'Available Timings', type: 'dropdown', options: ['Full-time', 'Part-time', 'As-needed'] },
+                { key: 'pricing', label: 'Pricing Model', type: 'dropdown', options: ['Hourly', 'Fixed'] },
+                { key: 'specialization', label: 'Specialization Field', type: 'text' },
+            ]},
+        ];
+
+        // --- Enterprise Sub-Role Options (What Analyst searches for) ---
+        const EnterpriseSubRoles = [
+            { key: 'Enterprise - Established', label: 'Established Enterprise', fields: [
+                { key: 'industry', label: 'Industry', type: 'text' },
+                { key: 'budget', label: 'Min Budget ($)', type: 'number_min' },
+                { key: 'data_size', label: 'Data Size/Volume', type: 'dropdown', options: ['Large', 'Medium', 'Small'] },
+                { key: 'legal', label: 'Legal/Compliance Notes', type: 'text' },
+            ]},
+            { key: 'Enterprise - Growth-stage', label: 'Growth-stage Company', fields: [
+                { key: 'industry', label: 'Industry', type: 'text' },
+                { key: 'budget', label: 'Min Budget ($)', type: 'number_min' },
+                { key: 'legal', label: 'Legal Status', type: 'text' },
+            ]},
+        ];
+
+        return isSearchingForAnalyst ? AnalystSubRoles : EnterpriseSubRoles;
+    }, [oppositeRole]);
+
+
+    const currentSubRoleConfig = useMemo(() => {
+        if (!subRoleFilter) return null;
+        return ALL_FILTERS.find(config => config.key === subRoleFilter);
+    }, [subRoleFilter, ALL_FILTERS]);
+
+
+    const handleSubRoleChange = useCallback((key) => {
+        setSubRoleFilter(key);
+        setSpecificFilters({}); // Reset specific filters when sub-role changes
+        if (key === '') {
+            onFilterChange(''); // Clear filters if 'All' is selected
+        }
+    }, [onFilterChange]);
+
+    const handleSpecificChange = useCallback((key, value) => {
+        setSpecificFilters(prev => ({
+            ...prev,
+            [key]: value
+        }));
+    }, []);
+
+    const applyFilters = useCallback(() => {
+        // If no sub-role is selected, we can't filter, so revert to viewing all
+        if (!subRoleFilter) return onFilterChange(''); 
+
+        const queryParts = [`role=${encodeURIComponent(subRoleFilter)}`];
+        
+        for (const key in specificFilters) {
+            const value = specificFilters[key];
+            if (value && value.toString().trim() !== '') {
+                // Special handling for minimum/range numbers
+                if (key.includes('number_min') || key.includes('budget')) {
+                    // Mongoose filter keys used in server.js: years, team, budget
+                    const mongoKey = key.replace('_min', '');
+                    queryParts.push(`${mongoKey}_min=${encodeURIComponent(value)}`);
+                } else {
+                    queryParts.push(`${key}=${encodeURIComponent(value)}`);
+                }
+            }
+        }
+        
+        onFilterChange(queryParts.join('&'));
+    }, [subRoleFilter, specificFilters, onFilterChange]);
+
+    const handleClear = useCallback(() => {
+        setSubRoleFilter('');
+        setSpecificFilters({});
+        onFilterChange('');
+    }, [onFilterChange]);
+
+
+    const renderSpecificFilters = () => {
+        if (!currentSubRoleConfig) return null;
+
+        return (
+            <div style={{ marginTop: '20px', padding: '15px 0', borderTop: '1px solid #eee' }}>
+                <h4 style={{ color: theme.muted, marginBottom: '15px', fontSize: '1.1rem' }}>
+                    Criteria for {currentSubRoleConfig.label}
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                    {currentSubRoleConfig.fields.map(option => {
+                        const value = specificFilters[option.key] || '';
+                        
+                        let InputComponent;
+                        if (option.type === 'dropdown') {
+                            InputComponent = (
+                                <select
+                                    key={option.key}
+                                    value={value}
+                                    onChange={(e) => handleSpecificChange(option.key, e.target.value)}
+                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.1)' }}
+                                >
+                                    <option value="">-- Select --</option>
+                                    {option.options.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            );
+                        } else {
+                            InputComponent = (
+                                <input
+                                    key={option.key}
+                                    type={option.type.includes('number') ? 'number' : 'text'}
+                                    placeholder={option.label}
+                                    value={value}
+                                    onChange={(e) => handleSpecificChange(option.key, e.target.value)}
+                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.1)' }}
+                                />
+                            );
+                        }
+                        
+                        return (
+                            <div key={option.key}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: theme.muted }}>
+                                    {option.label}
+                                </label>
+                                {InputComponent}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div style={{ padding: '20px', background: theme.card, borderRadius: theme.round, boxShadow: `0 8px 20px ${theme.shadow}`, marginBottom: '30px' }}>
+            <h3 style={{ color: theme.primary, marginBottom: '20px' }}>Filter {oppositeRole}s by Sub-Role</h3>
+            
+            {/* --- 1. Sub-Role Selection Dropdown --- */}
+            <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: theme.text }}>
+                    Select Type of {oppositeRole}
+                </label>
+                <select
+                    value={subRoleFilter}
+                    onChange={(e) => handleSubRoleChange(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: `1px solid ${theme.primaryMuted}` }}
+                >
+                    <option value="">-- View All {oppositeRole}s --</option>
+                    {ALL_FILTERS.map(config => (
+                        <option key={config.key} value={config.key}>{config.label}</option>
+                    ))}
+                </select>
+            </div>
+
+            {/* --- 2. Dynamic Specific Criteria --- */}
+            {renderSpecificFilters()}
+
+            <div style={{ marginTop: '25px', display: 'flex', gap: '10px' }}>
+                <button 
+                    onClick={applyFilters} 
+                    className="btn-primary"
+                    disabled={!subRoleFilter}
+                    style={{ padding: '10px 20px', fontSize: '1rem' }}
+                >
+                    Apply Filters
+                </button>
+                <button 
+                    onClick={handleClear} 
+                    className="btn-outline"
+                    style={{ padding: '10px 20px', fontSize: '1rem' }}
+                >
+                    Clear All Filters
+                </button>
+            </div>
+        </div>
+    );
+};<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyst Signup | Scrutiny</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav>
+    <div>Scrutiny</div>
+    <div>
+        <button onclick="location.href='index.html'">Home</button>
+    </div>
+</nav>
+
+<section>
+    <h1>Register as Analyst</h1>
+    <form id="analystForm" style="max-width:400px;margin:20px auto;display:flex;flex-direction:column;gap:10px;">
+        <input type="text" id="name" placeholder="Full Name" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <input type="text" id="specialization" placeholder="Specialization" required>
+        <input type="text" id="pricing" placeholder="Pricing Model" required>
+        <button type="submit">Register</button>
+    </form>
+</section>
+
+<footer>
+    <p>© Team Scrutiny | 2025</p>
+</footer>
+
+<script>
+    const form = document.getElementById('analystForm');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            specialization: document.getElementById('specialization').value,
+            pricing: document.getElementById('pricing').value,
+            type: "Analyst"
+        };
+
+        const res = await fetch('/api/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        alert(result.message);
+        if (result.success) window.location.href = 'login.html';
+    });
+</script>
+</body>
+</html>
+import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
+
+// Custom theme colors derived from style.css
+const theme = {
+  primary: '#21917b',
+  primaryMuted: '#5eb1a0',
+  card: '#ffffff',
+  text: '#000000',
+  muted: '#536a66',
+  background: '#d8eeeb',
+  round: '12px',
+  shadow: 'rgba(33,145,123,0.12)',
+};
+
+const FindOpposite = () => {
+  const [oppositeUsers, setOppositeUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const getOppositeRole = (role) => {
+    if (!role) return null;
+    return role.toLowerCase().includes('analyst') ? 'Enterprise' : 'Analyst';
+  };
+
+  useEffect(() => {
+    const fetchOppositeUsers = async () => {
+      setLoading(true);
+      setError(null);
+      
+      const userString = localStorage.getItem('user');
+      if (!userString) {
+        // Redirect if session is lost
+        window.location.href = 'login.html';
+        return;
+      }
+
+      try {
+        const user = JSON.parse(userString);
+        if (!user || !user.role) throw new Error("Invalid session data");
+
+        const requiredRole = getOppositeRole(user.role);
+        
+        if (!requiredRole) {
+            setError("Invalid user role detected.");
+            setLoading(false);
+            return;
+        }
+
+        setCurrentUser(user);
+        setUserRole(requiredRole);
+        
+        // Fetch data from the assumed new backend endpoint
+        const response = await fetch(`http://localhost:5000/api/users/${requiredRole}`);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch ${requiredRole} list. Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setOppositeUsers(data.users || []);
+
+      } catch (err) {
+        console.error("Fetch or session error:", err);
+        setError("Could not load users. Server, network, or session issue.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOppositeUsers();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    window.location.href = 'index.html';
+  };
+
+  const OppositeList = () => {
+    if (loading) {
+      return <div style={{ textAlign: 'center', padding: '40px', color: theme.muted, fontSize: '1.1rem' }}>Loading available {userRole}s...</div>;
+    }
+
+    if (error) {
+      return <div style={{ textAlign: 'center', padding: '40px', color: '#d04545', fontWeight: 'bold' }}>Error: {error}</div>;
+    }
+
+    if (oppositeUsers.length === 0) {
+      return <div style={{ textAlign: 'center', padding: '40px', color: theme.muted, fontSize: '1.1rem' }}>No {userRole}s currently registered.</div>;
+    }
+
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginTop: '30px' }}>
+        {oppositeUsers.map((user, index) => (
+          <div
+            key={index}
+            style={{
+              background: theme.card,
+              borderRadius: theme.round,
+              padding: '20px',
+              border: `1px solid rgba(0,0,0,0.04)`,
+              boxShadow: `0 10px 30px ${theme.shadow}`,
+              transition: 'transform 0.1s ease',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <h3 style={{ color: theme.primary, fontSize: '1.4rem', marginBottom: '8px' }}>{user.name}</h3>
+            <p style={{ color: theme.muted, fontSize: '0.95rem', marginBottom: '4px' }}>**Role**: {user.role}</p>
+            <p style={{ color: theme.muted, fontSize: '0.95rem', marginBottom: '15px' }}>**Email**: {user.email}</p>
+            
+            <p style={{ color: theme.text, fontSize: '0.9rem', borderLeft: `3px solid ${theme.primaryMuted}`, paddingLeft: '10px' }}>
+                {user.role.toLowerCase().includes('analyst') ? 
+                    `Specialization: ${user.specialization || 'N/A'}` : 
+                    `Industry: ${user.industry || 'N/A'}`
+                }
+            </p>
+
+            <button
+                style={{
+                    padding: '8px 16px',
+                    marginTop: '15px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: theme.primaryMuted,
+                    color: theme.card,
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background 0.15s ease',
+                }}
+                onClick={() => { /* Placeholder for View Profile action */ }}
+                onMouseOver={(e) => e.currentTarget.style.background = theme.primary}
+                onMouseOut={(e) => e.currentTarget.style.background = theme.primaryMuted}
+            >
+                View Profile
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', background: theme.background, fontFamily: 'Poppins, sans-serif' }}>
+        <nav style={{ background: theme.card, padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.06)', boxShadow: `0 6px 18px ${theme.shadow}` }}>
+            <div style={{ fontWeight: '700', color: theme.primaryMuted, fontSize: '20px' }}>Scrutiny</div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                    onClick={() => window.location.href = 'homepage2.html'}
+                    style={{ padding: '8px 12px', borderRadius: '8px', background: 'transparent', border: '1px solid rgba(0,0,0,0.08)', cursor: 'pointer', color: theme.text, transition: 'all 0.2s ease' }}
+                    onMouseOver={(e) => { e.currentTarget.style.background = theme.primary; e.currentTarget.style.color = '#ffffff'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.text; }}
+                >
+                    Dashboard
+                </button>
+                <button 
+                    onClick={handleLogout}
+                    style={{ padding: '8px 12px', borderRadius: '8px', background: '#ff4d4f', border: 'none', cursor: 'pointer', color: '#ffffff', fontWeight: '600' }}
+                >
+                    Logout
+                </button>
+            </div>
+        </nav>
+        
+        <main style={{ padding: '40px 20px', maxWidth: '1200px', margin: '0 auto' }}>
+            <h1 style={{ textAlign: 'center', fontSize: '2.5rem', color: theme.primary, marginBottom: '10px' }}>
+                Available {userRole}s
+            </h1>
+            <p style={{ textAlign: 'center', color: theme.muted, marginBottom: '30px', fontSize: '1.1rem' }}>
+                {currentUser ? `Currently browsing the network as ${currentUser.name}` : ''}
+            </p>
+
+            <OppositeList />
+
+        </main>
+
+        <footer style={{ textAlign: 'center', padding: '18px 10px', color: theme.muted, marginTop: '40px' }}>
+            <p>© Team Scrutiny | 2025</p>
+        </footer>
+    </div>
+  );
+};
+
+// Assuming this component is rendered directly in the environment,
+// similar to an HTML file's main content.
+export default FindOpposite;<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Find Users | Scrutiny</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css" />
+    
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="./search.jsx" type="text/babel"></script> 
+</head>
+<body>
+    <div id="root">
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+        const theme = {
+          primary: '#21917b',
+          primaryMuted: '#5eb1a0',
+          card: '#ffffff',
+          text: '#000000',
+          muted: '#536a66',
+          background: '#d8eeeb',
+          round: '12px',
+          shadow: 'rgba(33,145,123,0.12)',
+        };
+
+        const useThemeStyle = (styleProps) => styleProps;
+
+        const handleLogout = () => {
+          localStorage.removeItem('user');
+          window.location.href = 'index.html';
+        };
+        
+        // --- Profile View Component (Required for the file to be complete) ---
+        // (NOTE: This component is fully defined here for completeness but relies on the same logic 
+        // as the one extracted to EditDelete.jsx)
+        const ProfileView = ({ userId, onBack }) => {
+            const [profile, setProfile] = useState(null);
+            const [currentUser, setCurrentUser] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [requestStatus, setRequestStatus] = useState(null); // null, 'sending', 'sent', 'error'
+            const [requestMessage, setRequestMessage] = useState('');
+
+            useEffect(() => {
+                const userString = localStorage.getItem('user');
+                if (userString) {
+                    try {
+                        const user = JSON.parse(userString);
+                        setCurrentUser(user);
+                    } catch (e) {
+                        console.error("Failed to parse current user from localStorage:", e);
+                    }
+                }
+            }, []);
+
+            useEffect(() => {
+                const fetchProfile = async () => {
+                    setLoading(true);
+                    setError(null);
+                    try {
+                        const response = await fetch(`http://localhost:5000/api/user/${userId}`);
+                        
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch profile. Status: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        if (data.success && data.user) {
+                            setProfile(data.user);
+                        } else {
+                            setError(data.message || "User profile not found.");
+                        }
+
+                    } catch (err) {
+                        console.error("Profile fetch error:", err);
+                        setError("Could not load user profile. Check server connection (http://localhost:5000) and MongoDB.");
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+                fetchProfile();
+            }, [userId]);
+
+            const handleSendRequest = async () => {
+                if (!currentUser || !profile || requestStatus === 'sending' || !requestMessage.trim()) {
+                    alert('Please ensure you are logged in and have entered a message.');
+                    return;
+                }
+                
+                setRequestStatus('sending');
+                
+                const isAnalystSender = currentUser.role && currentUser.role.toLowerCase().includes('analyst');
+
+                const payload = {
+                    senderId: currentUser.id,
+                    senderName: currentUser.name,
+                    senderEmail: currentUser.email,
+                    targetId: profile._id,
+                    targetRole: profile.role,
+                    
+                    service: isAnalystSender ? 'Analyst Service Inquiry' : 'Enterprise Project Proposal',
+                    budget: isAnalystSender ? 'Discuss Fee' : 'Discuss Budget',
+                    data_size: 'Details in Message',
+                    message: requestMessage.trim(),
+                };
+                
+                try {
+                    const res = await fetch('http://localhost:5000/api/requests', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        localStorage.setItem('lastSentRequest', JSON.stringify(payload));
+                        setRequestStatus('sent');
+                        setTimeout(() => window.location.href = 'requestion.html', 1000);
+                    } else {
+                        const err = await res.json();
+                        setRequestStatus('error');
+                        console.error("Request submission failed:", err.message);
+                    }
+                } catch (err) {
+                    setRequestStatus('error');
+                    console.error("Network error sending request:", err);
+                }
+            };
+
+            const Card = useThemeStyle({
+                background: theme.card,
+                borderRadius: theme.round,
+                padding: '30px',
+                border: `1px solid rgba(0,0,0,0.04)`,
+                boxShadow: `0 10px 30px ${theme.shadow}`,
+                maxWidth: '700px',
+                margin: '30px auto',
+            });
+
+            const DetailRow = useThemeStyle({
+                display: 'flex',
+                justifyContent: 'space-between',
+                padding: '10px 0',
+                borderBottom: '1px dashed rgba(0,0,0,0.1)',
+                alignItems: 'center',
+            });
+
+            const DetailLabel = useThemeStyle({
+                color: theme.muted,
+                fontWeight: '400',
+                flexBasis: '40%',
+            });
+
+            const DetailValue = useThemeStyle({
+                color: theme.text,
+                fontWeight: '600',
+                textAlign: 'right',
+                flexBasis: '60%',
+            });
+
+            const SectionTitle = useThemeStyle({
+                color: theme.primary,
+                fontSize: '1.5rem',
+                borderBottom: `2px solid ${theme.primaryMuted}`,
+                paddingBottom: '8px',
+                marginBottom: '20px',
+                marginTop: '30px',
+                fontWeight: '700',
+            });
+
+            if (loading) {
+                return <div style={{ textAlign: 'center', padding: '40px', color: theme.muted, fontSize: '1.1rem' }}>Loading profile details...</div>;
+            }
+
+            if (error || !profile) {
+                return <div style={{ textAlign: 'center', padding: '40px', color: '#d04545', fontWeight: 'bold' }}>{error || "Profile not found."}</div>;
+            }
+
+            const formatValue = (value, prefix = '', suffix = '') => {
+                if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) {
+                    return 'N/A';
+                }
+                return `${prefix}${value}${suffix}`;
+            };
+
+            // MAPPING LOGIC FOR PROFILE VIEW (defined here for completeness)
+            const getRoleConfig = (userRoleKey) => ({
+                'analyst - agency': [
+                    { label: 'Agency Name', key: 'name' },
+                    { label: 'Website', key: 'website' },
+                    { label: 'Service Offered', key: 'service' },
+                    { label: 'Specialisation', key: 'specialization' },
+                    { label: 'Pricing Model', key: 'pricing' },
+                    { label: 'Legal Entity', key: 'legal' },
+                    { label: 'Credibility/Portfolio', key: 'credibility' },
+                    { label: 'Years in operation', key: 'years' },
+                ],
+                'analyst - startup': [
+                    { label: 'Company Name', key: 'name' },
+                    { label: 'Website', key: 'website' },
+                    { label: 'Service Offered', key: 'service' },
+                    { label: 'Specialisation', key: 'specialization' },
+                    { label: 'Pricing Model', key: 'pricing' },
+                    { label: 'Legal Status', key: 'legal' },
+                    { label: 'Credibility/Portfolio', key: 'credibility' },
+                    { label: 'Team Size', key: 'team' },
+                ],
+                'analyst - expert': [
+                    { label: 'Full Name', key: 'name' },
+                    { label: 'Portfolio/GitHub', key: 'portfolio' },
+                    { label: 'Service Offered', key: 'service' },
+                    { label: 'Specialisation', key: 'specialization' },
+                    { label: 'Pricing Model', key: 'pricing' },
+                    { label: 'Legal/Contract Status', key: 'legal' },
+                    { label: 'Credibility/Testimonials', key: 'credibility' },
+                    { label: 'Available Timings', key: 'timing' },
+                ],
+                'enterprise - established': [
+                    { label: 'Organization Name', key: 'name' },
+                    { label: 'Industry', key: 'industry' },
+                    { label: 'Service Required', key: 'service' },
+                    { label: 'Budget Estimate', key: 'budget', format: (val) => formatValue(val, '$', ' USD') },
+                    { label: 'Legal/Compliance Notes', key: 'legal' },
+                    { label: 'Estimated Data Size', key: 'data_size' },
+                ],
+                'enterprise - growth-stage': [
+                    { label: 'Company Name', key: 'name' },
+                    { label: 'Industry', key: 'industry' },
+                    { label: 'Service Required', key: 'service' },
+                    { label: 'Budget Estimate', key: 'budget', format: (val) => formatValue(val) },
+                    { label: 'Legal', key: 'legal' },
+                    { label: 'Estimated Data Size', key: 'data_size' },
+                ],
+            })[(profile.role || '').toLowerCase()] || [];
+
+
+            const renderDetails = (profileData) => {
+                const userRoleKey = (profileData.role || '').toLowerCase();
+                const specificDetails = getRoleConfig(userRoleKey);
+                
+                let details = [
+                    { label: 'Role Type', value: profileData.role },
+                    { label: 'Email', value: profileData.email },
+                    { label: 'Contact Phone', value: formatValue(profileData.contact) },
+                ];
+
+                details = details.concat(
+                    specificDetails.map(config => ({
+                        label: config.label,
+                        value: config.format 
+                            ? config.format(profileData[config.key]) 
+                            : formatValue(profileData[config.key])
+                    }))
+                );
+
+                return details.map((d, i) => (
+                    <div key={i} style={DetailRow}>
+                        <span style={DetailLabel}>{d.label}</span>
+                        <span style={DetailValue}>{d.value}</span>
+                    </div>
+                ));
+            }
+            
+            let buttonText = 'Send Project Request';
+            if (requestStatus === 'sending') buttonText = 'Sending...';
+            if (requestStatus === 'sent') buttonText = 'Request Sent!';
+            if (requestStatus === 'error') buttonText = 'Retry Request';
+
+            const buttonDisabled = !currentUser || requestStatus === 'sent' || requestStatus === 'sending' || !requestMessage.trim();
+
+            return (
+                <div style={{ padding: '20px' }}>
+                    <button onClick={onBack} className="btn-outline" style={{ margin: '0 0 20px 0' }}>
+                        &larr; Back to {profile.role.toLowerCase().includes('analyst') ? 'Enterprises' : 'Analysts'}
+                    </button>
+                    <div style={Card}>
+                        <h1 style={{ color: theme.primary, fontSize: '2.2rem', marginBottom: '8px', textAlign: 'center' }}>
+                            {profile.name}
+                        </h1>
+                        <p style={{ color: theme.muted, fontSize: '1.1rem', marginBottom: '30px', textAlign: 'center' }}>
+                            {profile.role}
+                        </p>
+
+                        <div style={SectionTitle}>Key Details</div>
+                        {renderDetails(profile)}
+
+                        <div style={SectionTitle}>About</div>
+                        <p style={{ color: theme.text, lineHeight: '1.6' }}>
+                            {profile.about || "No detailed 'About' section provided."}
+                        </p>
+
+                        <div style={SectionTitle}>Send Collaboration Request</div>
+                        <textarea
+                            placeholder="Enter a brief message about the project or collaboration opportunity (Required)"
+                            value={requestMessage}
+                            onChange={(e) => setRequestMessage(e.target.value)}
+                            style={{ width: '100%', minHeight: '100px', padding: '10px', borderRadius: '8px', marginBottom: '15px' }}
+                            required
+                        ></textarea>
+
+
+                        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                            <button 
+                                onClick={handleSendRequest}
+                                className="btn-primary"
+                                disabled={buttonDisabled}
+                                style={{ minWidth: '250px' }}
+                            >
+                                {buttonText}
+                            </button>
+                            <p style={{ color: theme.muted, fontSize: '0.9rem', marginTop: '10px' }}>
+                                {requestStatus === 'sent' ? 'Request saved! Redirecting to your requests page...' : 'This saves the request in the database.'}
+                            </p>
+                            {requestStatus === 'error' && <p style={{ color: '#ff4d4f', fontWeight: '600', fontSize: '0.9rem' }}>Failed to send request. Check console/server logs.</p>}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Main Find Opposites Component ---
+        const FindOpposite = () => {
+          const [oppositeUsers, setOppositeUsers] = useState([]);
+          const [loading, setLoading] = useState(true);
+          const [error, setError] = useState(null);
+          const [userRole, setUserRole] = useState(null);
+          const [currentUser, setCurrentUser] = useState(null);
+          const [view, setView] = useState('list');
+          const [selectedUserId, setSelectedUserId] = useState(null);
+          
+          const [filterQuery, setFilterQuery] = useState('');
+
+          useEffect(() => {
+            const userString = localStorage.getItem('user');
+            if (!userString) {
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                const user = JSON.parse(userString);
+                if (!user || !user.role || !user.id) throw new Error("Invalid session data");
+                
+                setCurrentUser(user);
+            } catch (err) {
+                console.error("Session error:", err);
+                window.location.href = 'login.html';
+            }
+          }, []);
+
+          const getOppositeRole = (role) => {
+            if (!role) return null;
+            return role.toLowerCase().includes('analyst') ? 'Enterprise' : 'Analyst';
+          };
+
+          const handleFilterChange = useCallback((query) => {
+              // The query string already contains the necessary role=... filter
+              setFilterQuery(query);
+          }, []);
+
+          useEffect(() => {
+            if (view !== 'list' || !currentUser) return;
+
+            const fetchOppositeUsers = async () => {
+              setLoading(true);
+              setError(null);
+              
+              const requiredRole = getOppositeRole(currentUser.role);
+              
+              if (!requiredRole) {
+                  setError("Invalid current user role detected.");
+                  setLoading(false);
+                  return;
+              }
+
+              setUserRole(requiredRole);
+              
+              // If filterQuery starts with 'role=', the server will use that specific sub-role.
+              // Otherwise, the server defaults to the base role type.
+              const apiUrl = `http://localhost:5000/api/users/${requiredRole}${filterQuery ? `?${filterQuery}` : ''}`;
+
+              try {
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch ${requiredRole} list. Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success && data.users) {
+                    setOppositeUsers(data.users); 
+                } else {
+                    setError(data.message || 'Failed to retrieve user list.');
+                }
+
+              } catch (err) {
+                console.error("Fetch or session error:", err);
+                setError("Could not load users. Please ensure the Express server is running on port 5000.");
+              } finally {
+                setLoading(false);
+              }
+            };
+
+            fetchOppositeUsers();
+          }, [view, currentUser, filterQuery]);
+
+          const handleViewProfile = (user) => {
+              setSelectedUserId(user._id); 
+              setView('profile');
+          };
+
+          const OppositeList = () => {
+            if (loading) {
+              return <div style={{ textAlign: 'center', padding: '40px', color: theme.muted, fontSize: '1.1rem' }}>Loading available {userRole}s...</div>;
+            }
+
+            if (error) {
+              return <div style={{ textAlign: 'center', padding: '40px', color: '#d04545', fontWeight: 'bold' }}>Error: {error}</div>;
+            }
+
+            if (oppositeUsers.length === 0) {
+              return <div style={{ textAlign: 'center', padding: '40px', color: theme.muted, fontSize: '1.1rem' }}>No {userRole}s currently registered matching your criteria.</div>;
+            }
+
+            return (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginTop: '30px' }}>
+                {oppositeUsers.map((user, index) => (
+                  <div
+                    key={user._id || index}
+                    style={{
+                      background: theme.card,
+                      borderRadius: theme.round,
+                      padding: '20px',
+                      border: `1px solid rgba(0,0,0,0.04)`,
+                      boxShadow: `0 10px 30px ${theme.shadow}`,
+                      transition: 'transform 0.1s ease',
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
+                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    <h3 style={{ color: theme.primary, fontSize: '1.4rem', marginBottom: '8px' }}>{user.name}</h3>
+                    <p style={{ color: theme.muted, fontSize: '0.95rem', marginBottom: '4px' }}>Role: {user.role}</p>
+                    <p style={{ color: theme.muted, fontSize: '0.95rem', marginBottom: '15px' }}>Email: {user.email}</p>
+                    
+                    <p style={{ color: theme.text, fontSize: '0.9rem', borderLeft: `3px solid ${theme.primaryMuted}`, paddingLeft: '10px' }}>
+                        {user.role && user.role.toLowerCase().includes('analyst') ? 
+                            `Specialization: ${user.specialization || 'N/A'}` : 
+                            `Industry: ${user.industry || 'N/A'}`
+                        }
+                    </p>
+
+                    <button
+                        style={{
+                            padding: '8px 16px',
+                            marginTop: '15px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: theme.primaryMuted,
+                            color: theme.card,
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'background 0.15s ease',
+                        }}
+                        onClick={() => handleViewProfile(user)}
+                        onMouseOver={(e) => e.currentTarget.style.background = theme.primary}
+                        onMouseOut={(e) => e.currentTarget.style.background = theme.primaryMuted}
+                    >
+                        View Profile
+                    </button>
+                  </div>
+                ))}
+              </div>
+            );
+          };
+          
+          const renderContent = () => {
+              if (view === 'list') {
+                  return (
+                      <React.Fragment>
+                          <h1 style={{ textAlign: 'center', fontSize: '2.5rem', color: theme.primary, marginBottom: '10px' }}>
+                              Available {userRole}s
+                          </h1>
+                          <p style={{ textAlign: 'center', color: theme.muted, marginBottom: '30px', fontSize: '1.1rem' }}>
+                              {currentUser ? `Currently browsing the network as ${currentUser.name}` : ''}
+                          </p>
+
+                          {/* CRITICAL: Render the search component and pass state handler */}
+                          {typeof AdvancedSearchFilter !== 'undefined' && userRole && (
+                            <AdvancedSearchFilter 
+                                onFilterChange={handleFilterChange} 
+                                oppositeRole={userRole} 
+                            />
+                          )}
+
+                          <OppositeList />
+                      </React.Fragment>
+                  );
+              } else if (view === 'profile') {
+                  return <ProfileView userId={selectedUserId} onBack={() => setView('list')} />;
+              }
+              return null;
+          }
+
+          return (
+            <div style={{ minHeight: '100vh', background: theme.background, fontFamily: 'Poppins, sans-serif' }}>
+                <nav style={{ background: theme.card, padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.06)', boxShadow: `0 6px 18px ${theme.shadow}` }}>
+                    <div style={{ fontWeight: '700', color: theme.primaryMuted, fontSize: '20px' }}>Scrutiny</div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button 
+                            onClick={() => window.location.href = 'homepage2.html'}
+                            style={{ padding: '8px 12px', borderRadius: '8px', background: 'transparent', border: '1px solid rgba(0,0,0,0.08)', cursor: 'pointer', color: theme.text, transition: 'all 0.2s ease' }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = theme.primary; e.currentTarget.style.color = '#ffffff'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.text; }}
+                        >
+                            Dashboard
+                        </button>
+                        <button 
+                            onClick={handleLogout}
+                            style={{ padding: '8px 12px', borderRadius: '8px', background: '#ff4d4f', border: 'none', cursor: 'pointer', color: '#ffffff', fontWeight: '600' }}
+                        >
+                            Logout
+                        </button>
+                    </div>
+                </nav>
+                
+                <main style={{ padding: view === 'list' ? '40px 20px' : '40px 0', maxWidth: '1200px', margin: '0 auto' }}>
+                    {renderContent()}
+                </main>
+
+                <footer style={{ textAlign: 'center', padding: '18px 10px', color: theme.muted, marginTop: '40px' }}>
+                    <p>© Team Scrutiny | 2025</p>
+                </footer>
+            </div>
+          );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<FindOpposite />);
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrutiny | Where Data Finds Its Direction</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Fonts & Animation Libraries -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+</head>
+
+<body>
+<!-- NAVBAR -->
+<nav>
+    <div class="logo">Scrutiny</div>
+    <div class="nav-buttons">
+        <button onclick="location.href='index.html'">Home</button>
+        <button onclick="location.href='login.html'">Login</button>
+        <button onclick="location.href='signup.html'">Signup</button>
+        <button onclick="location.href='contact.html'">Contact Us</button>
+        <button onclick="location.href='quickfix.html'">QuickFix</button>
+    </div>
+</nav>
+
+<!-- HERO SECTION -->
+<section class="hero" data-aos="fade-up" data-aos-duration="1200">
+    <h1>Where Data Finds Its Direction</h1>
+    <p>
+        Connecting enterprises and analysts for seamless data collaboration and instant insights.
+    </p>
+    <button class="cta-btn" onclick="location.href='signup.html'">Get Started</button>
+</section>
+
+<!-- ABOUT SECTION -->
+<section class="about" data-aos="zoom-in" data-aos-delay="300" data-aos-duration="1200">
+    <h2>About Scrutiny</h2>
+    <p>
+        Scrutiny is your trusted platform connecting businesses with expert data analysts. 
+        We empower companies to make data-driven decisions by providing access to a curated 
+        network of skilled professionals. Whether you're seeking advanced analytics, predictive 
+        modeling, or business intelligence solutions, Scrutiny ensures seamless collaboration 
+        with transparent profiles, verified credentials, and tools like QuickFix for instant support.
+    </p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <p>Made by Team Scrutiny — Sharanya R, Ramya H R, Amay Halapeti</p>
+</footer>
+
+<script>
+    AOS.init({
+        duration: 1200,
+        once: true,
+        easing: 'ease-out-cubic'
+    });
+</script>
+</body>
+</html>

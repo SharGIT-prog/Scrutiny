@@ -1,0 +1,945 @@
+const { useState, useEffect } = React;
+
+const theme = {
+    primary: '#21917b',
+    primaryMuted: '#5eb1a0',
+    card: '#ffffff',
+    text: '#000000',
+    muted: '#536a66',
+    background: '#d8eeeb',
+    round: '12px',
+    shadow: 'rgba(33,145,123,0.12)',
+};
+
+const Card = {
+    background: theme.card,
+    borderRadius: theme.round,
+    padding: '30px',
+    border: `1px solid rgba(0,0,0,0.04)`,
+    boxShadow: `0 10px 30px ${theme.shadow}`,
+    maxWidth: '700px',
+    margin: '30px auto',
+};
+
+const DetailRow = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '10px 0',
+    borderBottom: '1px dashed rgba(0,0,0,0.1)',
+    alignItems: 'center',
+};
+
+const DetailLabel = {
+    color: theme.muted,
+    fontWeight: '400',
+    flexBasis: '40%',
+};
+
+const DetailValue = {
+    color: theme.text,
+    fontWeight: '600',
+    textAlign: 'right',
+    flexBasis: '60%',
+};
+
+const SectionTitle = {
+    color: theme.primary,
+    fontSize: '1.5rem',
+    borderBottom: `2px solid ${theme.primaryMuted}`,
+    paddingBottom: '8px',
+    marginBottom: '20px',
+    marginTop: '30px',
+    fontWeight: '700',
+};
+
+const formatValue = (value, prefix = '', suffix = '') => {
+    if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) {
+        return 'N/A';
+    }
+    return `${prefix}${value}${suffix}`;
+};
+
+// MAPPING LOGIC FOR DYNAMIC FIELDS
+const getRoleConfig = (userRoleKey) => ({
+    'analyst - agency': [
+        { label: 'Agency Name', key: 'name' },
+        { label: 'Website', key: 'website' },
+        { label: 'Service Offered', key: 'service' },
+        { label: 'Specialisation', key: 'specialization' },
+        { label: 'Pricing Model', key: 'pricing' },
+        { label: 'Legal Entity', key: 'legal' },
+        { label: 'Credibility/Portfolio', key: 'credibility' },
+        { label: 'Years in operation', key: 'years' },
+    ],
+    'analyst - startup': [
+        { label: 'Company Name', key: 'name' },
+        { label: 'Website', key: 'website' },
+        { label: 'Service Offered', key: 'service' },
+        { label: 'Specialisation', key: 'specialization' },
+        { label: 'Pricing Model', key: 'pricing' },
+        { label: 'Legal Status', key: 'legal' },
+        { label: 'Credibility/Portfolio', key: 'credibility' },
+        { label: 'Team Size', key: 'team' },
+    ],
+    'analyst - expert': [
+        { label: 'Full Name', key: 'name' },
+        { label: 'Portfolio/GitHub', key: 'portfolio' },
+        { label: 'Service Offered', key: 'service' },
+        { label: 'Specialisation', key: 'specialization' },
+        { label: 'Pricing Model', key: 'pricing' },
+        { label: 'Legal/Contract Status', key: 'legal' },
+        { label: 'Credibility/Testimonials', key: 'credibility' },
+        { label: 'Available Timings', key: 'timing' },
+    ],
+    'enterprise - established': [
+        { label: 'Organization Name', key: 'name' },
+        { label: 'Industry', key: 'industry' },
+        { label: 'Service Required', key: 'service' },
+        { label: 'Budget Estimate', key: 'budget', format: (val) => formatValue(val, '$', ' USD') },
+        { label: 'Legal/Compliance Notes', key: 'legal' },
+        { label: 'Estimated Data Size', key: 'data_size' },
+    ],
+    'enterprise - growth-stage': [
+        { label: 'Company Name', key: 'name' },
+        { label: 'Industry', key: 'industry' },
+        { label: 'Service Required', key: 'service' },
+        { label: 'Budget Estimate', key: 'budget', format: (val) => formatValue(val) },
+        { label: 'Legal', key: 'legal' },
+        { label: 'Estimated Data Size', key: 'data_size' },
+    ],
+})[(userRoleKey || '').toLowerCase()] || [];
+
+const UserProfileView = ({ user, onEdit, onProfileUpdate }) => {
+    const [profile, setProfile] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const userId = user.id;
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await fetch(`http://localhost:5000/api/user/${userId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch profile. Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success && data.user) {
+                    setProfile(data.user);
+                } else {
+                    setError(data.message || "User profile not found.");
+                }
+
+            } catch (err) {
+                console.error("Profile fetch error:", err);
+                setError("Could not load user profile. Check server connection (http://localhost:5000).");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (userId) fetchProfile();
+    }, [userId, onProfileUpdate]);
+
+    const handleDelete = async () => {
+        if (!confirm("Are you sure you want to delete your profile? This action cannot be undone.")) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/user/${userId}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                alert("Profile deleted successfully. Redirecting to homepage.");
+                localStorage.removeItem('user');
+                window.location.href = 'index.html';
+            } else {
+                const errorData = await response.json();
+                alert("Failed to delete profile: " + (errorData.message || response.statusText));
+            }
+        } catch (err) {
+            alert("Network error: Could not delete profile.");
+        }
+    };
+
+    const renderDetails = (profileData) => {
+        const userRoleKey = (profileData.role || '').toLowerCase();
+        const specificDetails = getRoleConfig(userRoleKey);
+        
+        let details = [
+            { label: 'Role Type', value: profileData.role },
+            { label: 'Email', value: profileData.email },
+            { label: 'Contact Phone', value: formatValue(profileData.contact) },
+        ];
+
+        details = details.concat(
+            specificDetails.map(config => ({
+                label: config.label,
+                value: config.format 
+                    ? config.format(profileData[config.key]) 
+                    : formatValue(profileData[config.key])
+            }))
+        );
+        
+        return details.map((d, i) => (
+            <div key={i} style={DetailRow}>
+                <span style={DetailLabel}>{d.label}</span>
+                <span style={DetailValue}>{d.value}</span>
+            </div>
+        ));
+    };
+
+    if (loading) {
+        return <div style={{ textAlign: 'center', padding: '40px', color: theme.muted, fontSize: '1.1rem' }}>Loading profile details...</div>;
+    }
+
+    if (error || !profile) {
+        return <div style={{ textAlign: 'center', padding: '40px', color: '#d04545', fontWeight: 'bold' }}>{error || "Profile not found."}</div>;
+    }
+
+    return (
+        <div style={{ padding: '20px' }}>
+            <div style={Card}>
+                <h2 style={{ color: theme.primary, fontSize: '2.0rem', marginBottom: '8px', textAlign: 'center' }}>
+                    {profile.name}'s Profile
+                </h2>
+                <p style={{ color: theme.muted, fontSize: '1.0rem', marginBottom: '30px', textAlign: 'center' }}>
+                    {profile.role}
+                </p>
+
+                <div style={SectionTitle}>Key Details</div>
+                {renderDetails(profile)}
+
+                <div style={SectionTitle}>About</div>
+                <p style={{ color: theme.text, lineHeight: '1.6', marginBottom: '40px' }}>
+                    {profile.about || "No detailed 'About' section provided."}
+                </p>
+
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+                    <button onClick={() => onEdit(profile)} className="btn-primary" style={{ background: theme.primaryMuted }}>
+                        Edit Profile
+                    </button>
+                    <button onClick={handleDelete} className="btn-outline" style={{ background: '#ff4d4f', color: theme.card, border: 'none' }}>
+                        Delete Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const UserProfileEdit = ({ profile, onSave, onCancel }) => {
+    const [formData, setFormData] = useState({ ...profile, password: '' });
+    const [saving, setSaving] = useState(false);
+
+    const handleChange = (e) => {
+        const { name, value, type } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: (type === 'number' && value) ? parseFloat(value) : value
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        
+        const dataToSubmit = { ...formData };
+        delete dataToSubmit._id; 
+        
+        if (!dataToSubmit.password || dataToSubmit.password.trim() === '') {
+            delete dataToSubmit.password;
+        } else if (dataToSubmit.password.length < 8) {
+            alert("New password must be at least 8 characters long.");
+            setSaving(false);
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/user/${profile._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataToSubmit)
+            });
+
+            if (response.ok) {
+                alert("Profile updated successfully!");
+                localStorage.setItem('user', JSON.stringify({
+                    id: profile._id,
+                    name: formData.name,
+                    email: formData.email,
+                    role: formData.role
+                }));
+                onSave(); 
+            } else {
+                const errorData = await response.json();
+                alert("Failed to save changes: " + (errorData.message || response.statusText));
+            }
+        } catch (err) {
+            alert("Network error: Could not save profile.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const fields = [];
+    const userRoleKey = (profile.role || '').toLowerCase();
+    
+    // --- EDIT FORM FIELDS (Reusing Configuration) ---
+    const formConfigKeys = {
+        'analyst - agency': ['name', 'contact', 'email', 'website', 'service', 'specialization', 'pricing', 'legal', 'credibility', 'years', 'about'],
+        'analyst - startup': ['name', 'contact', 'email', 'website', 'service', 'specialization', 'pricing', 'legal', 'credibility', 'team', 'about'],
+        'analyst - expert': ['name', 'contact', 'email', 'portfolio', 'service', 'specialization', 'pricing', 'legal', 'credibility', 'timing', 'about'],
+        'enterprise - established': ['name', 'contact', 'email', 'industry', 'service', 'budget', 'legal', 'data_size', 'about'],
+        'enterprise - growth-stage': ['name', 'contact', 'email', 'industry', 'service', 'budget', 'legal', 'data_size', 'about'],
+    };
+    
+    const fieldLabels = {
+        name: userRoleKey.includes('analyst') ? 'Agency/Full Name *' : 'Organization/Company Name *',
+        contact: 'Contact Phone', email: 'Email *',
+        website: 'Website', portfolio: 'Portfolio / GitHub',
+        service: 'Service Offered/Required', specialization: 'Specialisation',
+        pricing: 'Pricing Model (e.g., hourly / fixed)', legal: 'Legal Status/Compliance',
+        credibility: 'Credibility / Portfolio Link', years: 'Years in operation',
+        team: 'Team Size', timing: 'Available Timings',
+        industry: 'Industry', budget: 'Budget Estimate (Number)', data_size: 'Estimated Data Size',
+        about: 'About / Additional Info',
+    };
+    
+    const currentFields = formConfigKeys[userRoleKey] || [];
+    
+    // Loop through relevant fields to generate form inputs
+    currentFields.forEach(key => {
+        const label = fieldLabels[key];
+        let type = 'text';
+        if (key === 'email') type = 'email';
+        if (key === 'years' || key === 'team' || key === 'budget') type = 'number';
+        
+        fields.push(
+            <div key={key} style={{ gridColumn: (key === 'about') ? '1 / -1' : 'auto' }}>
+                <label htmlFor={`edit-${key}`}>{label}</label>
+                {key === 'about' ? (
+                    <textarea 
+                        id={`edit-${key}`} 
+                        name={key} 
+                        value={formData[key] || ''} 
+                        onChange={handleChange}
+                    />
+                ) : (
+                    <input 
+                        id={`edit-${key}`} 
+                        name={key} 
+                        type={type} 
+                        value={formData[key] === null ? '' : formData[key]}
+                        onChange={handleChange} 
+                        required={key === 'name' || key === 'email'}
+                    />
+                )}
+            </div>
+        );
+    });
+
+    // Add password field separately
+    fields.push(
+        <div key="password-field" style={{ gridColumn: '1 / -1', marginTop: '15px' }}>
+            <label htmlFor="edit-password">New Password (Leave blank to keep old)</label>
+            <input 
+                id="edit-password" 
+                name="password" 
+                type="password" 
+                value={formData.password} 
+                onChange={handleChange} 
+                placeholder="Min 8 characters, letters and numbers"
+                minlength="8"
+            />
+        </div>
+    );
+
+    return (
+        <div style={{ padding: '20px' }}>
+            <div style={{ ...Card, maxWidth: '900px' }}>
+                <h2 style={{ color: theme.primary, fontSize: '2.0rem', marginBottom: '8px', textAlign: 'center' }}>
+                    Edit Profile: {profile.role}
+                </h2>
+                <p style={{ color: theme.muted, fontSize: '1.0rem', marginBottom: '30px', textAlign: 'center' }}>
+                    Only fields relevant to your current role are shown.
+                </p>
+                
+                <form onSubmit={handleSubmit}>
+                    <div className="form-grid" style={{ maxWidth: '800px', margin: '0 auto' }}>
+                        {fields}
+                    </div>
+
+                    <div style={{ textAlign: 'center', marginTop: '40px', display: 'flex', justifyContent: 'center', gap: '20px' }}>
+                        <button type="submit" className="btn-primary" disabled={saving}>
+                            {saving ? 'Saving...' : 'Save Changes'}
+                        </button>
+                        <button type="button" onClick={onCancel} className="btn-outline">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyst Dashboard | Scrutiny</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav>
+    <div class="logo">Scrutiny</div>
+    <div>
+        <button onclick="logout()">Logout</button>
+    </div>
+</nav>
+
+<section>
+    <h1>Welcome, Analyst!</h1>
+    <p>You can view available projects, check enterprise requests, and manage your analysis profile here.</p>
+</section>
+
+<footer>
+    <p>© Team Scrutiny | 2025</p>
+</footer>
+
+<script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.type !== 'Analyst') {
+        alert("Access Denied");
+        window.location.href = "login.html";
+    } else {
+        document.querySelector('h1').textContent = `Welcome, ${user.name}!`;
+    }
+
+    function logout() {
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+    }
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us | Scrutiny</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+</head>
+<body>
+<nav>
+    <div class="logo">Scrutiny</div>
+    <div class="nav-buttons">
+        <button onclick="location.href='index.html'">Home</button>
+        <button onclick="location.href='login.html'">Login</button>
+        <button onclick="location.href='signup.html'">Signup</button>
+        <button onclick="location.href='quickfix.html'">QuickFix</button>
+    </div>
+</nav>
+
+<section data-aos="fade-up">
+    <h1>Contact Us</h1>
+    <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 40px;">
+        <div style="background:var(--card); padding:20px; border-radius:10px; box-shadow: 0 3px 8px rgba(0,0,0,0.3);">
+            <h3>Sharanya R</h3>
+            <p>Email: pes1ug24cs902@pes.edu</p>
+        </div>
+        <div style="background:var(--card); padding:20px; border-radius:10px; box-shadow: 0 3px 8px rgba(0,0,0,0.3);">
+            <h3>Ramya H R</h3>
+            <p>Email: pes1ug25cs835@pes.edu</p>
+        </div>
+        <div style="background:var(--card); padding:20px; border-radius:10px; box-shadow: 0 3px 8px rgba(0,0,0,0.3);">
+            <h3>Amay Halapeti</h3>
+            <p>Email: pes1ug24cs052@pes.edu</p>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <p>Made by Team Scrutiny — 2025</p>
+</footer>
+
+<script>
+    AOS.init();
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Dashboard | Scrutiny</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav>
+    <div class="logo">Scrutiny</div>
+    <div>
+        <button onclick="logout()">Logout</button>
+    </div>
+</nav>
+
+<section>
+    <h1>Welcome, Enterprise!</h1>
+    <p>You can find data analysts, review their profiles, and post project requirements here.</p>
+</section>
+
+<footer>
+    <p>© Team Scrutiny | 2025</p>
+</footer>
+
+<script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.type !== 'Enterprise') {
+        alert("Access Denied");
+        window.location.href = "login.html";
+    } else {
+        document.querySelector('h1').textContent = `Welcome, ${user.name}!`;
+    }
+
+    function logout() {
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+    }
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard | Scrutiny</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/homepage2.css" />
+  
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <script src="./EditDelete.jsx" type="text/babel"></script> 
+
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const theme = {
+      primary: '#21917b',
+      primaryMuted: '#5eb1a0',
+      card: '#ffffff',
+      text: '#000000',
+      muted: '#536a66',
+      background: '#d8eeeb',
+      round: '12px',
+      shadow: 'rgba(33,145,123,0.12)',
+    };
+    
+    const handleLogout = () => {
+        localStorage.removeItem('user');
+        window.location.href = 'index.html'; 
+    };
+    
+    // --- Main Dashboard Component ---
+    const Dashboard = () => {
+        const [currentUser, setCurrentUser] = useState(null);
+        const [view, setView] = useState('main'); 
+        const [profileVersion, setProfileVersion] = useState(0); 
+
+        useEffect(() => {
+            const userString = localStorage.getItem('user');
+            if (!userString) {
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                const user = JSON.parse(userString);
+                if (!user || !user.role || !user.id) throw new Error("Invalid session data");
+                setCurrentUser(user);
+            } catch (e) {
+                console.error("Session error:", e);
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }, []);
+
+        const renderContent = () => {
+            if (!currentUser) {
+                return <div style={{ textAlign: 'center', padding: '40px', color: theme.muted }}>Session loading or error...</div>;
+            }
+
+            // Renders UserProfileView from EditDelete.jsx
+            if (view === 'profile') {
+                return (
+                    <UserProfileView 
+                        user={currentUser} 
+                        onEdit={(profile) => setView({ mode: 'edit', profile })}
+                        onProfileUpdate={() => setProfileVersion(v => v + 1)}
+                        key={`view-${profileVersion}`}
+                    />
+                );
+            }
+
+            // Renders UserProfileEdit from EditDelete.jsx
+            if (view && view.mode === 'edit') {
+                return (
+                    <UserProfileEdit 
+                        profile={view.profile}
+                        onSave={() => { 
+                            setView('profile'); 
+                            setProfileVersion(v => v + 1); 
+                        }}
+                        onCancel={() => setView('profile')}
+                    />
+                );
+            }
+
+            // Default 'main' view
+            const isAnalyst = currentUser.role.toLowerCase().includes('analyst');
+            const oppositeRole = isAnalyst ? 'Enterprise' : 'Analyst';
+
+            return (
+                <div style={{ padding: '40px 20px', maxWidth: '900px', margin: '0 auto' }}>
+                    <h1 className="dashboard-title" style={{ fontSize: '2.5rem' }}>
+                        Welcome, {currentUser.name}!
+                    </h1>
+                    <p style={{ textAlign: 'center', color: theme.muted, marginBottom: '24px', fontSize: '1.1rem' }}>
+                        You are registered as a {isAnalyst ? 'Data Analyst' : 'Business Enterprise'}.
+                    </p>
+                    <div id="main-content">
+                        <div className="dashboard-grid">
+                            <button onClick={() => setView('profile')} className="dashboard-btn btn-info">
+                                User Info (View/Edit)
+                            </button>
+                            <button onClick={() => window.location.href = 'find_opposite.html'} className="dashboard-btn btn-action">
+                                Find {oppositeRole}s
+                            </button>
+                            <button onClick={() => window.location.href = 'requestion.html'} className="dashboard-btn btn-info">
+                                Requests
+                            </button>
+                            <button onClick={handleLogout} className="dashboard-btn btn-logout">
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        return (
+            <div style={{ minHeight: '100vh', background: theme.background, fontFamily: 'Poppins, sans-serif' }}>
+                <nav style={{ background: theme.card, padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.06)', boxShadow: `0 6px 18px ${theme.shadow}` }}>
+                    <div style={{ fontWeight: '700', color: theme.primaryMuted, fontSize: '20px' }}>Scrutiny</div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button 
+                            onClick={() => setView('main')}
+                            style={{ padding: '8px 12px', borderRadius: '8px', background: 'transparent', border: '1px solid rgba(0,0,0,0.08)', cursor: 'pointer', color: theme.text, transition: 'all 0.2s ease' }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = theme.primary; e.currentTarget.style.color = '#ffffff'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.text; }}
+                        >
+                            Dashboard
+                        </button>
+                        <button 
+                            onClick={handleLogout}
+                            style={{ padding: '8px 12px', borderRadius: '8px', background: '#ff4d4f', border: 'none', cursor: 'pointer', color: '#ffffff', fontWeight: '600' }}
+                        >
+                            Logout
+                        </button>
+                    </div>
+                </nav>
+                <main className="page-fill">
+                    {renderContent()}
+                </main>
+                <footer>
+                    <p>© Team Scrutiny | 2025</p>
+                </footer>
+            </div>
+        );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />);
+  </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login | Scrutiny</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .login-wrap { width:100%; max-width:420px; margin: 0 auto; }
+    .login-card { padding: 32px; border-radius:12px; width:100%; background:var(--card); box-shadow: 0 12px 36px var(--shadow); border: 1px solid rgba(0,0,0,0.04); }
+    h2 { color: var(--primary); margin-bottom:10px; text-align:center; font-size:1.6rem; font-family: 'Poppins', sans-serif; font-weight: 700; }
+    .msg { text-align:center; margin-top:14px; color:var(--primary); min-height:20px; font-family: 'Poppins', sans-serif; }
+    label { font-family: 'Poppins', sans-serif !important; }
+    input { font-family: 'Poppins', sans-serif !important; }
+    input::placeholder { font-family: 'Poppins', sans-serif !important; }
+    @media (max-width:480px){ .login-card{ padding:20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Scrutiny</div>
+    <div class="nav-buttons">
+      <button onclick="location.href='index.html'">Home</button>
+      <button onclick="location.href='signup.html'">Signup</button>
+    </div>
+  </nav>
+
+  <main class="page-fill">
+    <div class="form-centered">
+      <div class="login-wrap">
+        <div class="login-card card">
+          <h2>Welcome Back</h2>
+          <form id="loginForm">
+            <label for="email">Email</label>
+            <input id="email" type="email" placeholder="Enter your email" required />
+
+            <label for="password">Password</label>
+            <input id="password" type="password" placeholder="Enter your password" required />
+
+            <div style="margin-top:20px;">
+              <button type="submit" class="btn-primary">Login</button>
+              <p id="msg" class="msg"></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Made by Team Scrutiny — 2025</p>
+  </footer>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById("msg");
+      msg.textContent = "Verifying credentials...";
+
+      const credentials = {
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value.trim(),
+      };
+
+      try {
+        const res = await fetch("http://localhost:5000/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(credentials),
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          // CRITICAL: Store ID, name, email, and role
+          localStorage.setItem('user', JSON.stringify({
+            id: result.id, 
+            name: result.name,
+            email: credentials.email,
+            role: result.role 
+          }));
+          msg.textContent = "Login successful! Redirecting...";
+          
+          setTimeout(() => {
+            window.location.href = "homepage2.html";
+          }, 1500);
+        } else {
+          msg.textContent = result.message || "Invalid email or password.";
+        }
+      } catch (err) {
+        console.error(err);
+        msg.textContent = "Server error. Please try again later.";
+      }
+    });
+  </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Requests Inbox | Scrutiny</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css" />
+    
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+</head>
+<body>
+    <div id="root">
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const theme = {
+          primary: '#21917b',
+          primaryMuted: '#5eb1a0',
+          card: '#ffffff',
+          text: '#000000',
+          muted: '#536a66',
+          background: '#d8eeeb',
+          round: '12px',
+          shadow: 'rgba(33,145,123,0.12)',
+        };
+        
+        const handleLogout = () => {
+          localStorage.removeItem('user');
+          window.location.href = 'index.html';
+        };
+
+        const RequestInbox = () => {
+            const [request, setRequest] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [currentUser, setCurrentUser] = useState(null);
+            
+            useEffect(() => {
+                const userString = localStorage.getItem('user');
+                const reqString = localStorage.getItem('lastSentRequest');
+                
+                if (!userString) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                setCurrentUser(JSON.parse(userString));
+                
+                if (reqString) {
+                    try {
+                        const parsedReq = JSON.parse(reqString);
+                        setRequest(parsedReq);
+                    } catch (e) {
+                        console.error("Error parsing request:", e);
+                        setRequest(null);
+                    }
+                }
+                setLoading(false);
+            }, []);
+
+            const DetailRow = ({ label, value }) => (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px dashed rgba(0,0,0,0.1)', alignItems: 'center' }}>
+                    <span style={{ color: theme.muted, fontWeight: '400', flexBasis: '40%' }}>{label}</span>
+                    <span style={{ color: theme.text, fontWeight: '600', textAlign: 'right', flexBasis: '60%' }}>{value || 'N/A'}</span>
+                </div>
+            );
+
+            const Card = {
+                background: theme.card,
+                borderRadius: theme.round,
+                padding: '30px',
+                border: `1px solid rgba(0,0,0,0.04)`,
+                boxShadow: `0 10px 30px ${theme.shadow}`,
+                maxWidth: '700px',
+                margin: '30px auto',
+            };
+
+            if (loading) {
+                return <div style={{ textAlign: 'center', padding: '40px', color: theme.muted, fontSize: '1.1rem' }}>Loading inbox...</div>;
+            }
+
+            return (
+                <div style={{ minHeight: '100vh', background: theme.background, fontFamily: 'Poppins, sans-serif' }}>
+                    <nav style={{ background: theme.card, padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.06)', boxShadow: `0 6px 18px ${theme.shadow}` }}>
+                        <div style={{ fontWeight: '700', color: theme.primaryMuted, fontSize: '20px' }}>Scrutiny</div>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button 
+                                onClick={() => window.location.href = 'homepage2.html'}
+                                className="btn-outline"
+                                style={{
+                                    marginLeft: 0, 
+                                    border: '1px solid var(--primary-3)', 
+                                    color: 'var(--primary)',
+                                    background: 'var(--bg)'
+                                }}
+                            >
+                                Dashboard
+                            </button>
+                            <button 
+                                onClick={handleLogout}
+                                style={{ padding: '8px 12px', borderRadius: '8px', background: '#ff4d4f', border: 'none', cursor: 'pointer', color: '#ffffff', fontWeight: '600' }}
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    </nav>
+
+                    <main style={{ padding: '40px 20px', maxWidth: '1200px', margin: '0 auto' }}>
+                        <h1 style={{ textAlign: 'center', fontSize: '2.5rem', color: theme.primary, marginBottom: '10px' }}>
+                            Requests Inbox
+                        </h1>
+                        <p style={{ textAlign: 'center', color: theme.muted, marginBottom: '30px', fontSize: '1.1rem' }}>
+                            Details of the project request you last sent.
+                        </p>
+                        
+                        {!request ? (
+                            <div style={{ textAlign: 'center', padding: '60px', border: '1px dashed #ccc', borderRadius: '12px', background: '#fcfdfe' }}>
+                                <p style={{ color: theme.muted, fontSize: '1.2rem' }}>No recent requests found in this session.</p>
+                            </div>
+                        ) : (
+                            <div style={Card}>
+                                <h3 style={{ color: theme.primary, fontSize: '1.8rem', marginBottom: '8px', textAlign: 'center' }}>
+                                    Request Sent Successfully!
+                                </h3>
+                                <p style={{ color: theme.muted, fontSize: '1rem', marginBottom: '30px', textAlign: 'center' }}>
+                                    Target: {request.targetRole} (ID: {request.targetId.substring(0, 8)}...)
+                                </p>
+
+                                <div style={{ color: theme.primary, fontSize: '1.5rem', borderBottom: `2px solid ${theme.primaryMuted}`, paddingBottom: '8px', marginBottom: '20px', marginTop: '30px', fontWeight: '700' }}>
+                                    Sender Details (You)
+                                </div>
+                                <DetailRow label="Sender Name" value={request.senderName} />
+                                <DetailRow label="Sender Email" value={request.senderEmail} />
+                                
+                                <div style={{ color: theme.primary, fontSize: '1.5rem', borderBottom: `2px solid ${theme.primaryMuted}`, paddingBottom: '8px', marginBottom: '20px', marginTop: '30px', fontWeight: '700' }}>
+                                    Project Details
+                                </div>
+                                
+                                <DetailRow label="Requested Service" value={request.service} />
+                                <DetailRow label="Budget Offered" value={request.budget || 'N/A'} />
+                                <DetailRow label="Data Size/Complexity" value={request.data_size || 'N/A'} />
+
+                                <div style={{ color: theme.primary, fontSize: '1.5rem', borderBottom: `2px solid ${theme.primaryMuted}`, paddingBottom: '8px', marginBottom: '20px', marginTop: '30px', fontWeight: '700' }}>
+                                    Message
+                                </div>
+                                <p style={{ color: theme.text, lineHeight: '1.6', background: '#f8f8f8', padding: '15px', borderRadius: '8px' }}>
+                                    {request.message || 'No specific message provided.'}
+                                </p>
+                            </div>
+                        )}
+
+                    </main>
+
+                    <footer style={{ textAlign: 'center', padding: '18px 10px', color: theme.muted, marginTop: '40px' }}>
+                        <p>© Team Scrutiny | 2025</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<RequestInbox />);
+    </script>
+</body>
+</html>

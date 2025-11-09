@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Requests Inbox | Scrutiny</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css" />
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- NEW: Import the BackButton component -->
+    <script src="./BackButton.jsx" type="text/babel"></script>
+
+    <style>
+        /* PART 4 FIX: New distinguishable background for Finished section */
+        .finished-container {
+            background: #f7fcfb; /* Slightly off-white/light grey background */
+            padding: 40px 20px;
+            border-radius: var(--round);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-top: 30px;
+        }
+
+        /* PART 4 FIX: Timeline Styling for Finished Projects */
+        .timeline-container { 
+            position: relative; 
+            max-width: 800px; 
+            margin: 50px auto; 
+            padding: 20px 0;
+            overflow: hidden; /* Contain absolute elements */
+        }
+        /* PART 4 FIX: Remove the horizontal bar */
+        .timeline-bar { 
+            display: none; 
+        }
+        .timeline-item {
+            position: relative;
+            z-index: 2;
+            width: 50%;
+            padding: 20px 0;
+            cursor: pointer;
+        }
+        .timeline-item:nth-child(odd) { 
+            left: 0; 
+            text-align: right; 
+            padding-right: 40px; /* Increased padding */
+        }
+        .timeline-item:nth-child(even) { 
+            left: 50%; 
+            text-align: left; 
+            padding-left: 40px; /* Increased padding */
+        }
+        /* Vertical dashed line instead of solid bar */
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: repeating-linear-gradient(to bottom, var(--primary-3), var(--primary-3) 5px, transparent 5px, transparent 10px);
+            transform: translateX(-1px);
+            z-index: 1;
+        }
+        .timeline-pin {
+            position: absolute;
+            top: calc(50% - 12px);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 4px solid var(--card);
+            box-shadow: 0 0 0 3px var(--primary-2);
+            transition: all 0.2s ease;
+            z-index: 2; /* Ensure pin is above the vertical line */
+        }
+        .timeline-item:nth-child(odd) .timeline-pin { 
+            right: -14px; /* Adjust pin position based on new padding */
+        }
+        .timeline-item:nth-child(even) .timeline-pin { 
+            left: -14px; /* Adjust pin position based on new padding */
+        }
+        .timeline-item:hover .timeline-pin { 
+            transform: scale(1.2); 
+            box-shadow: 0 0 0 6px var(--primary-2);
+        }
+        .timeline-content {
+            background: var(--card);
+            padding: 15px;
+            border-radius: var(--round);
+            box-shadow: 0 8px 20px var(--shadow);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .timeline-date {
+            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        /* Adjust button styles within the card for uniformity (PART 2 FIX) */
+        .card-btn-primary {
+            background: var(--primary-2);
+            color: var(--card);
+            border: none;
+        }
+        .card-btn-primary:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+    </style>
+
+</head>
+<body>
+    <div id="root">
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+        const BackButton = window.BackButton; 
+        
+        const theme = {
+            primary: '#21917b',
+            primaryMuted: '#5eb1a0',
+            card: '#ffffff',
+            text: '#000000',
+            muted: '#536a66',
+            background: '#d8eeeb',
+            round: '12px',
+            shadow: 'rgba(33,145,123,0.12)',
+        };
+
+        const handleLogout = () => {
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        };
+
+        const usePartnerName = (req, currentUser) => {
+            const isSender = req.senderId === currentUser.id;
+            const fallbackName = isSender ? req.targetRole : req.senderName;
+            
+            const [partnerName, setPartnerName] = useState(fallbackName);
+
+            useEffect(() => {
+                if (req.targetId) {
+                    const partnerId = isSender ? req.targetId : req.senderId;
+                    
+                    const fetchPartnerName = async () => {
+                        try {
+                            const cached = window.userCache && window.userCache[partnerId];
+                            if (cached) {
+                                setPartnerName(cached.name);
+                                return;
+                            }
+
+                            const response = await fetch(`http://localhost:5000/api/user/${partnerId}`);
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (data.success && data.user) {
+                                    setPartnerName(data.user.name);
+                                    window.userCache = { ...window.userCache, [partnerId]: { name: data.user.name } };
+                                } else {
+                                    setPartnerName(fallbackName);
+                                }
+                            } else {
+                                setPartnerName(fallbackName);
+                            }
+                        } catch (e) {
+                            setPartnerName(fallbackName);
+                        }
+                    };
+                    if (partnerName === fallbackName || partnerName.includes('-')) {
+                        fetchPartnerName();
+                    }
+                }
+            }, [req.targetId, isSender, fallbackName]);
+
+            return partnerName;
+        };
+
+
+        const FinishedProjectsTimeline = ({ requests, currentUser }) => {
+            const sortedRequests = requests.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+            if (requests.length === 0) {
+                return (
+                    <div style={{ textAlign: 'center', padding: '40px', color: theme.muted, fontSize: '1.1rem' }}>
+                        No completed projects found yet.
+                    </div>
+                );
+            }
+
+            const TimelineItem = ({ req, index, currentUser }) => {
+                // We use useEffect to call usePartnerName inside the functional component hook
+                const partnerName = usePartnerName(req, currentUser); 
+                const isOdd = index % 2 === 0;
+
+                return (
+                    <div key={req._id} className="timeline-item" style={{ left: isOdd ? '0' : '50%' }}>
+                        <div className="timeline-pin"></div>
+                        <div className="timeline-content">
+                            <div className="timeline-date">
+                                Completed: {new Date(req.timestamp).toLocaleDateString()}
+                            </div>
+                            <h4 style={{ color: theme.primary, fontSize: '1.2rem', margin: '0 0 5px 0' }}>
+                                Project with {partnerName}
+                            </h4>
+                            <p style={{ fontSize: '0.9rem', color: theme.text, margin: '0' }}>
+                                {req.message ? req.message.substring(0, 100) + (req.message.length > 100 ? '...' : '') : req.service}
+                            </p>
+                            {req.rating && (
+                                <p style={{ fontSize: '0.85rem', color: '#ff7f00', fontWeight: '600', marginTop: '8px' }}>
+                                    Rated: {req.rating.toFixed(1)}/10
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="timeline-container">
+                    {/* The timeline bar is visually replaced by a vertical dashed line in CSS ::before */}
+                    {sortedRequests.map((req, index) => (
+                        <TimelineItem key={req._id} req={req} index={index} currentUser={currentUser} />
+                    ))}
+                </div>
+            );
+        };
+
+        const RequestInbox = () => {
+            const [view, setView] = useState('main'); 
+            const [pendingSent, setPendingSent] = useState([]);
+            const [pendingReceived, setPendingReceived] = useState([]);
+            const [confirmed, setConfirmed] = useState([]); 
+            const [finished, setFinished] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [currentUser, setCurrentUser] = useState(null);
+            const [refreshKey, setRefreshKey] = useState(0);
+            
+            if (!window.userCache) {
+                window.userCache = {};
+            }
+
+            useEffect(() => {
+                const userString = localStorage.getItem('user');
+
+                if (!userString) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                const user = JSON.parse(userString);
+                setCurrentUser(user);
+
+                const fetchRequests = async () => {
+                    setLoading(true);
+                    setError(null);
+                    try {
+                        const response = await fetch(`http://localhost:5000/api/requests/${user.id}`);
+                        if (!response.ok) throw new Error('Failed to fetch requests.');
+
+                        const data = await response.json();
+
+                        setPendingSent(data.pendingSent);
+                        setPendingReceived(data.pendingReceived);
+                        setConfirmed(data.confirmed);
+                        setFinished(data.finished);
+                        
+                        localStorage.removeItem('lastSentRequest'); 
+
+                    } catch (e) {
+                        setError('Could not load requests. Check server connection (http://localhost:5000) and database.');
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                
+                fetchRequests();
+            }, [refreshKey]);
+
+            const handleRequestAction = async (requestId, action, rating = null) => {
+                const confirmation = action === 'Complete' 
+                    ? `Are you sure you want to mark this request as ${action}? You will be asked for a rating.`
+                    : `Are you sure you want to ${action.toLowerCase()} this request?`;
+                
+                if (!confirm(confirmation)) return;
+
+                let actualRating = rating;
+                if (action === 'Complete') {
+                    let input = prompt("Please enter your rating for the other party out of 10 (e.g., 8.5):");
+                    
+                    if (input === null || input.trim() === '') {
+                        return;
+                    }
+
+                    const parsedInput = parseFloat(input);
+                    if (isNaN(parsedInput) || parsedInput < 0 || parsedInput > 10) {
+                        alert("Invalid rating. Please enter a number between 0 and 10.");
+                        return;
+                    }
+                    actualRating = parsedInput;
+                }
+
+                try {
+                    const res = await fetch(`http://localhost:5000/api/requests/action/${requestId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action, rating: actualRating })
+                    });
+                    
+                    if (res.ok) {
+                        alert(`Request ${action.toLowerCase()} successfully!`);
+                        setRefreshKey(k => k + 1);
+                    } else {
+                        const err = await res.json();
+                        alert(`Failed to ${action.toLowerCase()} request: ${err.message}`);
+                    }
+                } catch (e) {
+                    alert(`Network error during request ${action}.`);
+                }
+            };
+
+            const DetailRow = ({ label, value }) => {
+                const isRedundant = 
+                    (label === 'Budget' && (value.includes('Discuss') || value.trim() === '')) ||
+                    (label === 'Data Size' && (value.includes('Details') || value.trim() === '')) ||
+                    (label === 'Service' && value.includes('Inquiry'));
+
+                if (isRedundant) return null;
+
+                return (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px dashed rgba(0,0,0,0.1)', alignItems: 'center', fontSize: '0.95rem' }}>
+                        <span style={{ color: theme.muted, fontWeight: '400', flexBasis: '40%' }}>{label}</span>
+                        <span style={{ color: theme.text, fontWeight: '600', textAlign: 'right', flexBasis: '60%' }}>{value || 'N/A'}</span>
+                    </div>
+                );
+            };
+
+            const RequestCard = ({ req }) => {
+                const userId = currentUser.id;
+                const isSender = req.senderId === userId;
+                
+                const partnerName = usePartnerName(req, currentUser);
+
+                const isCompleted = req.status === 'Completed';
+
+                return (
+                    <div style={{ background: theme.card, borderRadius: theme.round, padding: '20px', border: `1px solid rgba(0,0,0,0.04)`, boxShadow: `0 8px 20px ${theme.shadow}`, marginBottom: '20px' }}>
+                        <h4 style={{ color: theme.primary, fontSize: '1.4rem', marginBottom: '10px' }}>
+                            {isSender ? `To: ${partnerName}` : `From: ${partnerName}`}
+                        </h4>
+                        
+                        <div style={{ marginBottom: '15px' }}>
+                            <DetailRow label="Service" value={req.service} />
+                            <DetailRow label="Budget" value={req.budget} />
+                            <DetailRow label="Data Size" value={req.data_size} />
+                            <DetailRow label="Date Sent" value={new Date(req.timestamp).toLocaleDateString()} />
+                        </div>
+
+                        {/* Status */}
+                        <div style={{ padding: '10px', background: isCompleted ? '#e8f5e9' : (req.status === 'Accepted' ? '#fffde7' : (req.status === 'Rejected' ? '#ffebee' : '#f0f4f7')), borderRadius: '8px', marginBottom: '15px', borderLeft: `5px solid ${isCompleted ? '#4caf50' : (req.status === 'Accepted' ? '#ffeb3b' : (req.status === 'Rejected' ? '#f44336' : '#21917b'))}` }}>
+                            <p style={{ fontWeight: '700', color: theme.text }}>
+                                Status: <span style={{ color: isCompleted ? '#4caf50' : (req.status === 'Accepted' ? '#f57f17' : (req.status === 'Rejected' ? '#d32f2f' : '#21917b')) }}>{req.status}</span>
+                            </p>
+                            {isCompleted && req.rating && (
+                                <p style={{ fontWeight: '600', color: theme.text, marginTop: '5px' }}>
+                                    Rating Given: <span style={{ color: '#ff7f00' }}>{req.rating.toFixed(1)}/10</span>
+                                </p>
+                            )}
+                        </div>
+                        
+                        {/* Message */}
+                        <div style={{ padding: '10px 0', borderTop: '1px dashed #eee' }}>
+                            <p style={{ fontWeight: '600', color: theme.muted, marginBottom: '5px' }}>Message:</p>
+                            <p style={{ fontSize: '0.9rem', lineHeight: '1.4', color: theme.text }}>{req.message || 'No message provided.'}</p>
+                        </div>
+
+
+                        {/* Action Buttons (PART 2 FIX: Using consistent signup.html button styles) */}
+                        {req.status === 'Pending' && !isSender && (
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
+                                <button 
+                                    onClick={() => handleRequestAction(req._id, 'Accept')}
+                                    className="btn-primary card-btn-primary" 
+                                    >
+                                    Accept
+                                </button>
+                                <button 
+                                    onClick={() => handleRequestAction(req._id, 'Reject')}
+                                    className="btn-outline" 
+                                    style={{ background: '#ff4d4f', color: theme.card, border: 'none' }}>
+                                    Reject
+                                </button>
+                            </div>
+                        )}
+
+                        {req.status === 'Accepted' && !isSender && (
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
+                                <button
+                                    onClick={() => handleRequestAction(req._id, 'Complete')}
+                                    className="btn-primary"
+                                    style={{ background: '#4CAF50' }}>
+                                    Work Complete & Rate Sender
+                                </button>
+                            </div>
+                        )}
+
+                        {req.status === 'Accepted' && isSender && (
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
+                                <button disabled className="btn-outline" style={{ cursor: 'not-allowed', opacity: 0.8, background: '#f0f4f7' }}>
+                                    Awaiting Completion by {partnerName}
+                                </button>
+                            </div>
+                        )}
+                        
+                    </div>
+                );
+            };
+
+            const renderRequestList = (list, isFinishedView = false) => {
+                if (loading) return <div style={{ textAlign: 'center', padding: '40px', color: theme.muted }}>Loading...</div>;
+                if (error) return <div style={{ textAlign: 'center', padding: '40px', color: '#d04545', fontWeight: 'bold' }}>{error}</div>;
+                if (list.length === 0) return <div style={{ textAlign: 'center', padding: '40px', color: theme.muted, fontSize: '1.2rem' }}>No requests found in this section.</div>;
+
+                if (isFinishedView) return (
+                    <div className="finished-container"> {/* PART 4 FIX: Distinguishable background */}
+                        <h3 style={{ color: theme.primary, marginBottom: '20px', textAlign: 'center' }}>Project Timeline</h3>
+                        <FinishedProjectsTimeline requests={list} currentUser={currentUser} />
+                    </div>
+                );
+
+                return (
+                    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                        {list.map(req => (
+                            <RequestCard key={req._id} req={req} />
+                        ))}
+                    </div>
+                );
+            };
+
+            const renderContent = () => {
+                if (view === 'main') {
+                    return (
+                        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center', padding: '40px' }}>
+                            <h2 style={{ color: theme.primary, marginBottom: '20px' }}>Requests Overview</h2>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                <button onClick={() => setView('pending-view')} className="dashboard-btn btn-info">
+                                    <span style={{ fontSize: '1.2rem', fontWeight: '700' }}>Pending & Rejected</span>
+                                    <span style={{ display: 'block', fontSize: '0.9rem', marginTop: '5px' }}>{pendingSent.length + pendingReceived.length} Total</span>
+                                </button>
+                                <button onClick={() => setView('confirmed')} className="dashboard-btn btn-action">
+                                    <span style={{ fontSize: '1.2rem', fontWeight: '700' }}>Confirmed Projects</span>
+                                    <span style={{ display: 'block', fontSize: '0.9rem', marginTop: '5px' }}>{confirmed.length} Total</span>
+                                </button>
+                                <button onClick={() => setView('finished')} className="dashboard-btn btn-info" style={{ gridColumn: '1 / -1', background: '#e8f5e9', border: '1px solid #4CAF50', color: '#4CAF50' }}>
+                                    <span style={{ fontSize: '1.2rem', fontWeight: '700' }}>Finished Projects (History)</span>
+                                    <span style={{ display: 'block', fontSize: '0.9rem', marginTop: '5px' }}>{finished.length} Total</span>
+                                </button>
+                            </div>
+                        </div>
+                    );
+                } else if (view === 'pending-view') {
+                     return (
+                         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', position: 'relative' }}>
+                            <BackButton onClick={() => setView('main')} />
+                            <h2 style={{ color: theme.primary, marginBottom: '20px' }}>Pending Requests</h2>
+                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '30px' }}>
+                                <button 
+                                    onClick={() => setView('pending-sent')}
+                                    className="btn-primary card-btn-primary" 
+                                    style={{ background: view === 'pending-sent' ? theme.primary : theme.primaryMuted, minWidth: '150px' }}>
+                                    Sent ({pendingSent.length})
+                                </button>
+                                <button 
+                                    onClick={() => setView('pending-received')}
+                                    className="btn-primary card-btn-primary"
+                                    style={{ background: view === 'pending-received' ? theme.primary : theme.primaryMuted, minWidth: '150px' }}>
+                                    Received ({pendingReceived.length})
+                                </button>
+                            </div>
+                            
+                            {(view !== 'pending-sent' && view !== 'pending-received') && (
+                                <p style={{ color: theme.muted }}>Select Sent or Received to view requests.</p>
+                            )}
+
+                            {view === 'pending-sent' && (
+                                <React.Fragment>
+                                    <h3 style={{ color: theme.primaryMuted, marginBottom: '20px' }}>Requests Sent by You (Pending/Rejected)</h3>
+                                    {renderRequestList(pendingSent)}
+                                </React.Fragment>
+                            )}
+
+                            {view === 'pending-received' && (
+                                <React.Fragment>
+                                    <h3 style={{ color: theme.primaryMuted, marginBottom: '20px' }}>Requests Received by You (Pending)</h3>
+                                    {renderRequestList(pendingReceived)}
+                                </React.Fragment>
+                            )}
+                         </div>
+                    );
+                } else if (view === 'confirmed') {
+                    return (
+                        <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', position: 'relative' }}>
+                            <BackButton onClick={() => setView('main')} />
+                            <h2 style={{ color: theme.primary, marginBottom: '20px' }}>Confirmed/Accepted Projects</h2>
+                            <p style={{ color: theme.muted, marginBottom: '20px' }}>These projects are awaiting completion by the assigned party.</p>
+                            {renderRequestList(confirmed)}
+                        </div>
+                    );
+                } else if (view === 'finished') {
+                    return (
+                        <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center', position: 'relative' }}>
+                            <BackButton onClick={() => setView('main')} />
+                            <h2 style={{ color: theme.primary, marginBottom: '20px' }}>Finished Project History</h2>
+                            <p style={{ color: theme.muted, marginBottom: '20px' }}>Timeline of completed projects and given ratings.</p>
+                            {renderRequestList(finished, true)}
+                        </div>
+                    );
+                }
+                
+                 if (view === 'pending-sent') return renderRequestList(pendingSent);
+                 if (view === 'pending-received') return renderRequestList(pendingReceived);
+
+                 return null;
+            };
+
+            return (
+                <div style={{ minHeight: '100vh', background: theme.background, fontFamily: 'Poppins, sans-serif' }}>
+                    <nav style={{ background: theme.card, padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.06)', boxShadow: `0 6px 18px ${theme.shadow}` }}>
+                        <div style={{ fontWeight: '700', color: theme.primaryMuted, fontSize: '20px' }}>Scrutiny</div>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button
+                                onClick={() => window.location.href = 'homepage2.html'}
+                                className="btn-outline"
+                            >
+                                Dashboard
+                            </button>
+                            <button
+                                onClick={handleLogout}
+                                style={{ padding: '8px 12px', borderRadius: '8px', background: '#ff4d4f', border: 'none', cursor: 'pointer', color: '#ffffff', fontWeight: '600' }}
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    </nav>
+
+                    <main style={{ padding: '40px 20px', maxWidth: '1200px', margin: '0 auto', position: 'relative' }}>
+                        <h1 style={{ textAlign: 'center', fontSize: '2.5rem', color: theme.primary, marginBottom: '10px' }}>
+                            Requests Inbox
+                        </h1>
+                        <p style={{ textAlign: 'center', color: theme.muted, marginBottom: '30px', fontSize: '1.1rem' }}>
+                            Manage your incoming and outgoing project requests.
+                        </p>
+
+                        {renderContent()}
+
+                    </main>
+
+                    <footer style={{ textAlign: 'center', padding: '18px 10px', color: theme.muted, marginTop: '40px' }}>
+                        <p>© Team Scrutiny | 2025</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<RequestInbox />);
+    </script>
+</body>
+</html>

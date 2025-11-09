@@ -1,0 +1,11 @@
+{
+  "analysts": [
+    {
+      "name": "Test User",
+      "email": "test@example.com",
+      "password": "$2b$10$GCRCV7YUKJGQTV00ayc2yer966Z5DBkOyh7kZ7zS8vFlT4iuGgp/q",
+      "type": "Analyst"
+    }
+  ],
+  "enterprises": []
+}

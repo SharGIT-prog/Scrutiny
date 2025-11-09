@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyst Dashboard | Scrutiny</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav>
+<div class="logo-container">
+    <img src="assets/logo.png" alt="Scrutiny Logo" class="nav-logo">
+    <div class="logo">Scrutiny</div>
+</div>
+    <div>
+        <button onclick="logout()">Logout</button>
+    </div>
+</nav>
+
+<section>
+    <h1>Welcome, Analyst!</h1>
+    <p>You can view available projects, check enterprise requests, and manage your analysis profile here.</p>
+</section>
+
+<footer>
+    <p>© Team Scrutiny | 2025</p>
+</footer>
+
+<script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.type !== 'Analyst') {
+        alert("Access Denied");
+        window.location.href = "login.html";
+    } else {
+        document.querySelector('h1').textContent = `Welcome, ${user.name}!`;
+    }
+
+    function logout() {
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+    }
+</script>
+</body>
+</html>

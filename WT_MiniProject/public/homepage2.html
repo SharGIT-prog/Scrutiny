@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard | Scrutiny</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/homepage2.css" />
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script src="./EditDelete.jsx" type="text/babel"></script>
+  <script src="./BackButton.jsx" type="text/babel"></script>
+
+
+
+  <style>
+    /* PART 2 FIX: Ensure the grid has 3 columns and is centered */
+    .dashboard-grid-horizontal {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* Three columns */
+        gap: 20px;
+        margin-top: 30px;
+        max-width: 900px; /* Constrain grid width if necessary, though outer wrapper helps */
+        margin-left: auto;
+        margin-right: auto;
+    }
+    /* Ensure all three buttons look uniform (using btn-info styling but renaming class for clarity) */
+    .dashboard-btn-uniform {
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid var(--primary-2);
+        background: #f7fcfb; /* light background */
+        color: var(--primary); /* primary text color */
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: transform .15s ease, box-shadow .15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 90px;
+    }
+    .dashboard-btn-uniform:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 36px rgba(33,145,123,0.25);
+        background: var(--primary-2);
+        color: white; /* Text turns white on hover */
+    }
+    @media (max-width: 800px) {
+        .dashboard-grid-horizontal {
+            grid-template-columns: 1fr; /* Stack buttons vertically on smaller screens */
+        }
+    }
+  </style>
+
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const theme = {
+      primary: '#21917b',
+      primaryMuted: '#5eb1a0',
+      card: '#ffffff',
+      text: '#000000',
+      muted: '#536a66',
+      background: '#d8eeeb',
+      round: '12px',
+      shadow: 'rgba(33,145,123,0.12)',
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('user');
+        window.location.href = 'index.html';
+    };
+
+    // --- Main Dashboard Component ---
+    const Dashboard = () => {
+        const [currentUser, setCurrentUser] = useState(null);
+        const [view, setView] = useState('main');
+        const [profileVersion, setProfileVersion] = useState(0);
+
+        useEffect(() => {
+            const userString = localStorage.getItem('user');
+            if (!userString) {
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                const user = JSON.parse(userString);
+                if (!user || !user.role || !user.id) throw new Error("Invalid session data");
+                setCurrentUser(user);
+            } catch (e) {
+                console.error("Session error:", e);
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }, []);
+
+        const renderContent = () => {
+            if (!currentUser) {
+                return <div style={{ textAlign: 'center', padding: '40px', color: theme.muted }}>Session loading or error...</div>;
+            }
+
+            // Renders UserProfileView from EditDelete.jsx
+            if (view === 'profile') {
+                return (
+                    <UserProfileView
+                        user={currentUser}
+                        onEdit={(profile) => setView({ mode: 'edit', profile })}
+                        onProfileUpdate={() => setProfileVersion(v => v + 1)}
+                        key={`view-${profileVersion}`}
+                        onBack={() => setView('main')}
+                    />
+                );
+            }
+
+            // Renders UserProfileEdit from EditDelete.jsx
+            if (view && view.mode === 'edit') {
+                return (
+                    <UserProfileEdit
+                        profile={view.profile}
+                        onSave={() => {
+                            setView('profile');
+                            setProfileVersion(v => v + 1);
+                        }}
+                        onCancel={() => setView('profile')}
+                        onBack={() => setView('profile')}
+                    />
+                );
+            }
+
+            // Default 'main' view
+            const isAnalyst = currentUser.role.toLowerCase().includes('analyst');
+            const oppositeRole = isAnalyst ? 'Enterprise' : 'Analyst';
+
+            return (
+                <div style={{ padding: '40px 20px', maxWidth: '900px', margin: '0 auto' }}>
+                    <h1 className="dashboard-title" style={{ fontSize: '2.5rem' }}>
+                        Welcome, {currentUser.name}!
+                    </h1>
+                    <p style={{ textAlign: 'center', color: theme.muted, marginBottom: '24px', fontSize: '1.1rem' }}>
+                        You are registered as a {isAnalyst ? 'Data Analyst' : 'Business Enterprise'}.
+                    </p>
+                    <div id="main-content">
+                        {/* PART 2 FIX: Horizontal grid with three uniform buttons. Logout button removed from here. */}
+                        <div className="dashboard-grid-horizontal">
+                            <button onClick={() => setView('profile')} className="dashboard-btn-uniform">
+                                User Info (View/Edit)
+                            </button>
+                            <button onClick={() => window.location.href = 'find_opposite.html'} className="dashboard-btn-uniform">
+                                Find {oppositeRole}s
+                            </button>
+                            <button onClick={() => window.location.href = 'requestion.html'} className="dashboard-btn-uniform">
+                                Requests
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        return (
+            <div style={{ minHeight: '100vh', background: theme.background, fontFamily: 'Poppins, sans-serif' }}>
+                <nav style={{ background: theme.card, padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.06)', boxShadow: `0 6px 18px ${theme.shadow}` }}>
+                    <div style={{ fontWeight: '700', color: theme.primaryMuted, fontSize: '20px' }}>Scrutiny</div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                            onClick={() => setView('main')}
+                            style={{ padding: '8px 12px', borderRadius: '8px', background: 'transparent', border: '1px solid rgba(0,0,0,0.08)', cursor: 'pointer', color: theme.text, transition: 'all 0.2s ease' }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = theme.primary; e.currentTarget.style.color = '#ffffff'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.text; }}
+                        >
+                            Dashboard
+                        </button>
+                        {/* Header Logout Button - Kept as requested */}
+                        <button
+                            onClick={handleLogout}
+                            style={{ padding: '8px 12px', borderRadius: '8px', background: '#ff4d4f', border: 'none', cursor: 'pointer', color: '#ffffff', fontWeight: '600' }}
+                        >
+                            Logout
+                        </button>
+                    </div>
+                </nav>
+                <main className="page-fill" style={{ position: 'relative' }}>
+                    {renderContent()}
+                </main>
+                <footer>
+                    <p>© Team Scrutiny | 2025</p>
+                </footer>
+            </div>
+        );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />);
+  </script>
+</body>
+</html>

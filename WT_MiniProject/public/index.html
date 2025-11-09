@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrutiny | Where Data Finds Its Direction</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Fonts & Animation Libraries -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <style>
+        .about {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .about p {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+<!-- NAVBAR -->
+<nav>
+<div class="logo-container">
+    <img src="assets/logo.png" alt="Scrutiny Logo" class="nav-logo">
+    <div class="logo">Scrutiny</div>
+</div>
+    <div class="nav-buttons">
+        <button onclick="location.href='index.html'">Home</button>
+        <button onclick="location.href='login.html'">Login</button>
+        <button onclick="location.href='signup.html'">Signup</button>
+        <button onclick="location.href='contact.html'">Contact Us</button>
+        <button onclick="location.href='quickfix.html'">QuickFix</button>
+    </div>
+</nav>
+
+<!-- HERO SECTION (Background is var(--bg)) -->
+<section class="hero" data-aos="fade-up" data-aos-duration="1200">
+    <h1>Where Data Finds Its Direction</h1>
+    <p>
+        Connecting enterprises and analysts for seamless data collaboration and instant insights.
+    </p>
+    <button class="cta-btn" onclick="location.href='signup.html'">Get Started</button>
+</section>
+
+<!-- PART 1 FIX: Container for white background -->
+    <!-- ABOUT SECTION -->
+     <div class="section-container">
+        <br>
+    
+
+    
+  
+    <section class="about" data-aos="zoom-in" data-aos-delay="300" data-aos-duration="1200">
+        <h2>About Scrutiny</h2>
+        <p>
+            Scrutiny is your trusted platform connecting businesses with expert data analysts. 
+            We empower companies to make data-driven decisions by providing access to a curated 
+            network of skilled professionals. Whether you're seeking advanced analytics, predictive 
+            modeling, or business intelligence solutions, Scrutiny ensures seamless collaboration 
+            with transparent profiles, verified credentials, and tools like QuickFix for instant support.
+        </p>
+    </section>
+
+
+
+</div>
+
+    
+<!-- FOOTER -->
+<footer>
+    <p>Made by Team Scrutiny — Sharanya R, Ramya H R, Amay Halapeti</p>
+</footer>
+
+<script>
+    AOS.init({
+        duration: 1200,
+        once: true,
+        easing: 'ease-out-cubic'
+    });
+</script>
+</body>
+</html>

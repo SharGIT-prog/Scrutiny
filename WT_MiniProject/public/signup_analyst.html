@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyst Signup | Scrutiny</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav>
+    <div>Scrutiny</div>
+    <div>
+        <button onclick="location.href='index.html'">Home</button>
+    </div>
+</nav>
+
+<section>
+    <h1>Register as Analyst</h1>
+    <form id="analystForm" style="max-width:400px;margin:20px auto;display:flex;flex-direction:column;gap:10px;">
+        <input type="text" id="name" placeholder="Full Name" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <input type="text" id="specialization" placeholder="Specialization" required>
+        <input type="text" id="pricing" placeholder="Pricing Model" required>
+        <button type="submit">Register</button>
+    </form>
+</section>
+
+<footer>
+    <p>© Team Scrutiny | 2025</p>
+</footer>
+
+<script>
+    const form = document.getElementById('analystForm');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            specialization: document.getElementById('specialization').value,
+            pricing: document.getElementById('pricing').value,
+            type: "Analyst"
+        };
+
+        const res = await fetch('/api/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        alert(result.message);
+        if (result.success) window.location.href = 'login.html';
+    });
+</script>
+</body>
+</html>

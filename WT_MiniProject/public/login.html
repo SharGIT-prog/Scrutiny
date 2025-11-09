@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login | Scrutiny</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .login-wrap { width:100%; max-width:420px; margin: 0 auto; }
+    .login-card { padding: 32px; border-radius:12px; width:100%; background:var(--card); box-shadow: 0 12px 36px var(--shadow); border: 1px solid rgba(0,0,0,0.04); }
+    h2 { color: var(--primary); margin-bottom:10px; text-align:center; font-size:1.6rem; font-family: 'Poppins', sans-serif; font-weight: 700; }
+    .msg { text-align:center; margin-top:14px; color:var(--primary); min-height:20px; font-family: 'Poppins', sans-serif; }
+    label { font-family: 'Poppins', sans-serif !important; }
+    input { font-family: 'Poppins', sans-serif !important; }
+    input::placeholder { font-family: 'Poppins', sans-serif !important; }
+    @media (max-width:480px){ .login-card{ padding:20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo-container">
+    <img src="assets/logo.png" alt="Scrutiny Logo" class="nav-logo">
+    <div class="logo">Scrutiny</div>
+</div>
+
+
+<div class="nav-buttons">
+      <button onclick="location.href='index.html'">Home</button>
+      <button onclick="location.href='signup.html'">Signup</button>
+    </div>
+  </nav>
+
+  <main class="page-fill">
+    <div class="form-centered">
+      <div class="login-wrap">
+        <div class="login-card card">
+          <h2>Welcome Back</h2>
+          <form id="loginForm">
+            <label for="email">Email</label>
+            <input id="email" type="email" placeholder="Enter your email" required />
+
+            <label for="password">Password</label>
+            <input id="password" type="password" placeholder="Enter your password" required />
+
+            <div style="margin-top:20px;">
+              <button type="submit" class="btn-primary">Login</button>
+              <p id="msg" class="msg"></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Made by Team Scrutiny — 2025</p>
+  </footer>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById("msg");
+      msg.textContent = "Verifying credentials...";
+
+      const credentials = {
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value.trim(),
+      };
+
+      try {
+        const res = await fetch("http://localhost:5000/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(credentials),
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          // CRITICAL: Store ID, name, email, and role
+          localStorage.setItem('user', JSON.stringify({
+            id: result.id, 
+            name: result.name,
+            email: credentials.email,
+            role: result.role 
+          }));
+          msg.textContent = "Login successful! Redirecting...";
+          
+          setTimeout(() => {
+            window.location.href = "homepage2.html";
+          }, 1500);
+        } else {
+          msg.textContent = result.message || "Invalid email or password.";
+        }
+      } catch (err) {
+        console.error(err);
+        msg.textContent = "Server error. Please try again later.";
+      }
+    });
+  </script>
+</body>
+</html>

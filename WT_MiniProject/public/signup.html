@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Signup | Scrutiny</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .signup-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display:flex;
+      gap: 24px;
+      align-items: stretch;
+      justify-content: center;
+    }
+    .left-panel { flex:1 1 420px; padding: 28px; display:flex; flex-direction:column; justify-content:center; background: white; border-radius: 12px; box-shadow: 0 8px 24px var(--shadow); }
+    .right-panel { flex:1 1 560px; padding: 28px; display:flex; align-items:center; justify-content:center; background: white; border-radius: 12px; box-shadow: 0 8px 24px var(--shadow); min-height: 400px; }
+    .title { font-size:1.8rem; font-weight:700; color:var(--primary); margin-bottom:10px; font-family: 'Poppins', sans-serif; }
+    .choice-row { display:flex; gap:12px; flex-wrap:wrap; margin-top:12px; }
+    .choice-btn { min-width:150px; flex: 1; }
+    .form-card { width:100%; background: transparent; box-shadow: none; border: none; }
+    .form-panel:not(.hidden) { animation: fadeIn 0.4s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width:900px){ .signup-container { flex-direction:column; padding:12px; } .left-panel, .right-panel { padding:20px; } }
+  </style>
+</head>
+<body>
+  <nav>
+<div class="logo-container">
+    <img src="assets/logo.png" alt="Scrutiny Logo" class="nav-logo">
+    <div class="logo">Scrutiny</div>
+</div>
+
+<div class="nav-buttons">
+      <button onclick="location.href='index.html'">Home</button>
+      <button onclick="location.href='login.html'">Login</button>
+    </div>
+  </nav>
+
+  <main class="page-fill">
+    <div class="form-centered">
+      <div class="signup-container">
+        <div class="left-panel">
+          <div class="title">Register on Scrutiny</div>
+          <div class="small-note">Choose your account type — we'll show the relevant form next.</div>
+
+          <div style="margin-top:24px;">
+            <div style="margin-bottom:12px; color:var(--primary); font-weight: 600;">Choose account category</div>
+            <div class="choice-row">
+              <button class="choice-btn" id="btn-analyst">Register as Analyst</button>
+              <button class="choice-btn" id="btn-enterprise">Register as Enterprise</button>
+            </div>
+          </div>
+
+          <div id="analyst-options" class="hidden" style="margin-top:24px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <div style="margin-bottom:14px; color:var(--primary); font-weight: 600;">Analyst types</div>
+            <div class="choice-row">
+              <button class="choice-btn" data-target="agency-form">Data Solutions Agency</button>
+              <button class="choice-btn" data-target="startup-form">Growth-stage Startup</button>
+              <button class="choice-btn" data-target="expert-form">Independent Expert</button>
+            </div>
+          </div>
+
+          <div id="enterprise-options" class="hidden" style="margin-top:24px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <div style="margin-bottom:14px; color:var(--primary); font-weight: 600;">Enterprise types</div>
+            <div class="choice-row">
+              <button class="choice-btn" data-target="enterprise-large-form">Established Enterprise</button>
+              <button class="choice-btn" data-target="enterprise-small-form">Growth-stage Company</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-panel">
+          <div class="form-card">
+            <div id="welcome-message" style="text-align: center; color: var(--muted); padding: 40px 20px;">
+              <h3 style="color: var(--primary); margin-bottom: 16px; font-family: 'Poppins', sans-serif;">Welcome to Scrutiny</h3>
+              <p style="font-family: 'Poppins', sans-serif;">Please select your account type from the left panel to begin registration.</p>
+            </div>
+
+            <form id="agency-form" class="form-panel hidden" novalidate>
+              <div style="font-weight: 600; font-size: 1.1rem; color: var(--primary); margin-bottom: 16px;">Register — Data Solutions Agency</div>
+              <div class="form-grid" style="margin-top:12px;">
+                <div>
+                  <label for="agency-name">Agency Name *</label>
+                  <input id="agency-name" name="name" type="text" required />
+                </div>
+                <div>
+                  <label for="agency-contact">Contact Phone *</label>
+                  <input id="agency-contact" name="contact" type="tel" pattern="^[0-9\-\+\s]{7,20}$" required />
+                </div>
+
+                <div>
+                  <label for="agency-email">Email *</label>
+                  <input id="agency-email" name="email" type="email" required />
+                </div>
+                <div>
+                  <label for="agency-website">Website (optional)</label>
+                  <input id="agency-website" name="website" type="text" />
+                </div>
+
+                <div>
+                  <label for="agency-service">Service Offered *</label>
+                  <input id="agency-service" name="service" type="text" required />
+                </div>
+                <div>
+                  <label for="agency-special">Specialisation *</label>
+                  <input id="agency-special" name="specialization" type="text" required />
+                </div>
+
+                <div>
+                  <label for="agency-pricing">Pricing Model (e.g., hourly / fixed) *</label>
+                  <input id="agency-pricing" name="pricing" type="text" required />
+                </div>
+                <div>
+                  <label for="agency-legal">Legal Entity (LLC / Pvt / Pvt Ltd) *</label>
+                  <input id="agency-legal" name="legal" type="text" required />
+                </div>
+
+                <div>
+                  <label for="agency-cred">Credibility / Portfolio Link *</label>
+                  <input id="agency-cred" name="credibility" type="text" required />
+                </div>
+                <div>
+                  <label for="agency-years">Years in operation</label>
+                  <input id="agency-years" name="years" type="number" min="0" />
+                </div>
+
+                <div class="form-grid full" style="grid-column:1 / -1;">
+                  <label for="agency-about">About / Additional Info</label>
+                  <textarea id="agency-about" name="about"></textarea>
+                </div>
+
+                <div>
+                  <label for="agency-password">Password *</label>
+                  <input id="agency-password" name="password" type="password" minlength="8" required />
+                  <div class="small-note">At least 8 characters, mix of letters and numbers recommended.</div>
+                  <div id="agency-pass-err" class="error">Password too weak</div>
+                </div>
+
+                <div>
+                  <label>&nbsp;</label>
+                  <div class="field-inline">
+                    <input id="agency-terms" class="checkbox" type="checkbox" required />
+                    <label for="agency-terms" style="margin:0;">I confirm the agency is a legal operating entity *</label>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:16px;">
+                <button type="button" class="btn-primary" onclick="submitForm('agency-form','Analyst - Agency')">Register Agency</button>
+                <div id="agency-msg" class="small-note"></div>
+              </div>
+            </form>
+
+            <form id="startup-form" class="form-panel hidden" novalidate>
+              <div style="font-weight: 600; font-size: 1.1rem; color: var(--primary); margin-bottom: 16px;">Register — Growth-stage Startup</div>
+              <div class="form-grid" style="margin-top:12px;">
+                <div>
+                  <label for="startup-name">Company Name *</label>
+                  <input id="startup-name" name="name" type="text" required />
+                </div>
+                <div>
+                  <label for="startup-contact">Contact Phone *</label>
+                  <input id="startup-contact" name="contact" type="tel" pattern="^[0-9\-\+\s]{7,20}$" required />
+                </div>
+
+                <div>
+                  <label for="startup-email">Email *</label>
+                  <input id="startup-email" name="email" type="email" required />
+                </div>
+                <div>
+                  <label for="startup-website">Website (optional)</label>
+                  <input id="startup-website" name="website" type="text" />
+                </div>
+
+                <div>
+                  <label for="startup-service">Service Offered *</label>
+                  <input id="startup-service" name="service" type="text" required />
+                </div>
+                <div>
+                  <label for="startup-special">Specialisation *</label>
+                  <input id="startup-special" name="specialization" type="text" required />
+                </div>
+
+                <div>
+                  <label for="startup-pricing">Pricing Model *</label>
+                  <input id="startup-pricing" name="pricing" type="text" required />
+                </div>
+                <div>
+                  <label for="startup-legal">Legal Status *</label>
+                  <input id="startup-legal" name="legal" type="text" required />
+                </div>
+
+                <div>
+                  <label for="startup-cred">Credibility / Portfolio *</label>
+                  <input id="startup-cred" name="credibility" type="text" required />
+                </div>
+                <div>
+                  <label for="startup-team">Team Size</label>
+                  <input id="startup-team" name="team" type="number" min="1" />
+                </div>
+
+                <div class="form-grid full" style="grid-column:1 / -1;">
+                  <label for="startup-about">About / Additional Info</label>
+                  <textarea id="startup-about" name="about"></textarea>
+                </div>
+
+                <div>
+                  <label for="startup-password">Password *</label>
+                  <input id="startup-password" name="password" type="password" minlength="8" required />
+                  <div id="startup-pass-err" class="error">Password too weak</div>
+                </div>
+
+                <div>
+                  <label>&nbsp;</label>
+                  <div class="field-inline">
+                    <input id="startup-terms" class="checkbox" type="checkbox" required />
+                    <label for="startup-terms" style="margin:0;">I confirm the company is legally registered *</label>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:16px;">
+                <button type="button" class="btn-primary" onclick="submitForm('startup-form','Analyst - Startup')">Register Startup</button>
+                <div id="startup-msg" class="small-note"></div>
+              </div>
+            </form>
+
+            <form id="expert-form" class="form-panel hidden" novalidate>
+              <div style="font-weight: 600; font-size: 1.1rem; color: var(--primary); margin-bottom: 16px;">Register — Independent Expert</div>
+              <div class="form-grid" style="margin-top:12px;">
+                <div>
+                  <label for="expert-name">Full Name *</label>
+                  <input id="expert-name" name="name" type="text" required />
+                </div>
+                <div>
+                  <label for="expert-contact">Contact Phone *</label>
+                  <input id="expert-contact" name="contact" type="tel" pattern="^[0-9\-\+\s]{7,20}$" required />
+                </div>
+
+                <div>
+                  <label for="expert-email">Email *</label>
+                  <input id="expert-email" name="email" type="email" required />
+                </div>
+                <div>
+                  <label for="expert-portfolio">Portfolio / GitHub</label>
+                  <input id="expert-portfolio" name="portfolio" type="text" />
+                </div>
+
+                <div>
+                  <label for="expert-service">Service Offered *</label>
+                  <input id="expert-service" name="service" type="text" required />
+                </div>
+                <div>
+                  <label for="expert-special">Specialisation *</label>
+                  <input id="expert-special" name="specialization" type="text" required />
+                </div>
+
+                <div>
+                  <label for="expert-pricing">Pricing Model *</label>
+                  <input id="expert-pricing" name="pricing" type="text" required />
+                </div>
+                <div>
+                  <label for="expert-legal">Legal / Contract Status</label>
+                  <input id="expert-legal" name="legal" type="text" />
+                </div>
+
+                <div>
+                  <label for="expert-cred">Credibility / Testimonials *</label>
+                  <input id="expert-cred" name="credibility" type="text" required />
+                </div>
+                <div>
+                  <label for="expert-timing">Available Timings *</label>
+                  <input id="expert-timing" name="timing" type="text" required />
+                </div>
+
+                <div class="form-grid full" style="grid-column:1 / -1;">
+                  <label for="expert-about">About / Experience</label>
+                  <textarea id="expert-about" name="about"></textarea>
+                </div>
+
+                <div>
+                  <label for="expert-password">Password *</label>
+                  <input id="expert-password" name="password" type="password" minlength="8" required />
+                  <div id="expert-pass-err" class="error">Password too weak</div>
+                </div>
+
+                <div>
+                  <label>&nbsp;</label>
+                  <div class="field-inline">
+                    <input id="expert-terms" class="checkbox" type="checkbox" required />
+                    <label for="expert-terms" style="margin:0;">I confirm the information provided is true *</label>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:16px;">
+                <button type="button" class="btn-primary" onclick="submitForm('expert-form','Analyst - Expert')">Register Expert</button>
+                <div id="expert-msg" class="small-note"></div>
+              </div>
+            </form>
+
+            <form id="enterprise-large-form" class="form-panel hidden" novalidate>
+              <div style="font-weight: 600; font-size: 1.1rem; color: var(--primary); margin-bottom: 16px;">Register — Established Enterprise</div>
+              <div class="form-grid" style="margin-top:12px;">
+                <div>
+                  <label for="ent-large-name">Organization Name *</label>
+                  <input id="ent-large-name" name="name" type="text" required />
+                </div>
+                <div>
+                  <label for="ent-large-contact">Contact Phone *</label>
+                  <input id="ent-large-contact" name="contact" type="tel" pattern="^[0-9\-\+\s]{7,20}$" required />
+                </div>
+
+                <div>
+                  <label for="ent-large-email">Email *</label>
+                  <input id="ent-large-email" name="email" type="email" required />
+                </div>
+                <div>
+                  <label for="ent-large-industry">Industry *</label>
+                  <input id="ent-large-industry" name="industry" type="text" required />
+                </div>
+
+                <div>
+                  <label for="ent-large-service">Service Required *</label>
+                  <input id="ent-large-service" name="service" type="text" required />
+                </div>
+                <div>
+                  <label for="ent-large-budget">Budget Estimate (in USD) *</label>
+                  <input id="ent-large-budget" name="budget" type="number" min="0" required />
+                </div>
+
+                <div>
+                  <label for="ent-large-legal">Legal / Compliance Notes *</label>
+                  <input id="ent-large-legal" name="legal" type="text" required />
+                </div>
+                <div>
+                  <label for="ent-large-data">Estimated Data Size (rows or GB) *</label>
+                  <input id="ent-large-data" name="data_size" type="text" required />
+                </div>
+
+                <div class="form-grid full" style="grid-column:1 / -1;">
+                  <label for="ent-large-about">Additional Notes / SLA Requirements</label>
+                  <textarea id="ent-large-about" name="about"></textarea>
+                </div>
+
+                <div>
+                  <label for="ent-large-password">Password *</label>
+                  <input id="ent-large-password" name="password" type="password" minlength="8" required />
+                </div>
+
+                <div>
+                  <label>&nbsp;</label>
+                  <div class="field-inline">
+                    <input id="ent-large-terms" class="checkbox" type="checkbox" required />
+                    <label for="ent-large-terms" style="margin:0;">I confirm this enterprise is authorised to contract services *</label>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:16px;">
+                <button type="button" class="btn-primary" onclick="submitForm('enterprise-large-form','Enterprise - Established')">Register Enterprise</button>
+                <div id="ent-large-msg" class="small-note"></div>
+              </div>
+            </form>
+
+            <form id="enterprise-small-form" class="form-panel hidden" novalidate>
+              <div style="font-weight: 600; font-size: 1.1rem; color: var(--primary); margin-bottom: 16px;">Register — Growth-stage Company</div>
+              <div class="form-grid" style="margin-top:12px;">
+                <div>
+                  <label for="ent-small-name">Company Name *</label>
+                  <input id="ent-small-name" name="name" type="text" required />
+                </div>
+                <div>
+                  <label for="ent-small-contact">Contact Phone *</label>
+                  <input id="ent-small-contact" name="contact" type="tel" pattern="^[0-9\-\+\s]{7,20}$" required />
+                </div>
+
+                <div>
+                  <label for="ent-small-email">Email *</label>
+                  <input id="ent-small-email" name="email" type="email" required />
+                </div>
+                <div>
+                  <label for="ent-small-industry">Industry *</label>
+                  <input id="ent-small-industry" name="industry" type="text" required />
+                </div>
+
+                <div>
+                  <label for="ent-small-service">Service Required *</label>
+                  <input id="ent-small-service" name="service" type="text" required />
+                </div>
+                <div>
+                  <label for="ent-small-budget">Budget Estimate *</label>
+                  <input id="ent-small-budget" name="budget" type="number" min="0" required />
+                </div>
+
+                <div>
+                  <label for="ent-small-legal">Legal</label>
+                  <input id="ent-small-legal" name="legal" type="text" />
+                </div>
+                <div>
+                  <label for="ent-small-data">Estimated Data Size</label>
+                  <input id="ent-small-data" name="data_size" type="text" />
+                </div>
+
+                <div class="form-grid full" style="grid-column:1 / -1;">
+                  <label for="ent-small-about">Additional Notes</label>
+                  <textarea id="ent-small-about" name="about"></textarea>
+                </div>
+
+                <div>
+                  <label for="ent-small-password">Password *</label>
+                  <input id="ent-small-password" name="password" type="password" minlength="8" required />
+                </div>
+
+                <div>
+                  <label>&nbsp;</label>
+                  <div class="field-inline">
+                    <input id="ent-small-terms" class="checkbox" type="checkbox" required />
+                    <label for="ent-small-terms" style="margin:0;">I confirm the company can enter into contracts *</label>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:16px;">
+                <button type="button" class="btn-primary" onclick="submitForm('enterprise-small-form','Enterprise - Growth-stage')">Register Company</button>
+                <div id="ent-small-msg" class="small-note"></div>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Made by Team Scrutiny — 2025</p>
+  </footer>
+
+  <script>
+    // Show/hide top-level analyst/enterprise option panels
+    document.getElementById('btn-analyst').addEventListener('click', () => {
+      hideAllPanels();
+      hideWelcome();
+      document.getElementById('analyst-options').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    document.getElementById('btn-enterprise').addEventListener('click', () => {
+      hideAllPanels();
+      hideWelcome();
+      document.getElementById('enterprise-options').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // wire choice buttons to show their forms
+    document.querySelectorAll('[data-target]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        hideAllPanels();
+        hideWelcome();
+        const target = btn.getAttribute('data-target');
+        const panel = document.getElementById(target);
+        if(panel) panel.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    function hideAllPanels(){
+      document.querySelectorAll('.form-panel').forEach(el => el.classList.add('hidden'));
+    }
+
+    function hideWelcome(){
+      const welcome = document.getElementById('welcome-message');
+      if(welcome) welcome.classList.add('hidden');
+    }
+
+    // Basic password-strength check
+    function isPasswordStrong(pw){
+      if(!pw) return false;
+      return pw.length >= 8 && /[a-zA-Z]/.test(pw) && /\d/.test(pw);
+    }
+
+    // CRITICAL FIX: Generic form submit handler with data harmonization
+    async function submitForm(formId, roleLabel){
+      const form = document.getElementById(formId);
+      const msgEl = document.getElementById(formId.replace('-form', '-msg'));
+      if(!form) return;
+
+      if(!form.checkValidity()){
+        form.reportValidity();
+        if(msgEl) msgEl.textContent = 'Please fix the highlighted fields.';
+        return;
+      }
+
+      const pwd = form.querySelector('input[type="password"]');
+      if(pwd && !isPasswordStrong(pwd.value)){
+        const err = form.querySelector('.error');
+        if(err) err.style.display = 'block';
+        if(msgEl) msgEl.textContent = 'Please choose a stronger password.';
+        return;
+      } else {
+        const err = form.querySelector('.error');
+        if(err) err.style.display = 'none';
+      }
+
+      // --- START: Data Harmonization to Match Mongoose Schema ---
+      const rawData = {};
+      Array.from(new FormData(form).entries()).forEach(([k,v]) => { rawData[k] = v; });
+      
+      const data = {};
+      data.role = roleLabel;
+
+      // Map raw data keys (e.g., agency-name, ent-large-budget) to generic schema keys (name, budget)
+      for (const key in rawData) {
+          let genericKey = key;
+          
+          // Remove prefixes (e.g., agency-, startup-, ent-large-, ent-small-)
+          if (key.startsWith('agency-') || key.startsWith('startup-') || key.startsWith('expert-')) {
+              genericKey = key.substring(key.indexOf('-') + 1);
+          } else if (key.startsWith('ent-large-') || key.startsWith('ent-small-')) {
+              genericKey = key.substring(key.indexOf('-') + 7); // Removes e.g., 'ent-large-'
+          }
+          
+          // Handle specific re-mapping used by the schema
+          if (genericKey === 'special') genericKey = 'specialization'; 
+          if (genericKey === 'cred') genericKey = 'credibility'; 
+          
+          // Map to correct final field names:
+          const finalKey = {
+              'name': 'name', 'contact': 'contact', 'email': 'email', 
+              'website': 'website', 'portfolio': 'portfolio', 'service': 'service', 
+              'specialization': 'specialization', 'pricing': 'pricing', 'legal': 'legal', 
+              'credibility': 'credibility', 'years': 'years', 'team': 'team', 
+              'timing': 'timing', 'about': 'about', 'password': 'password',
+              'industry': 'industry', 'budget': 'budget', 'data': 'data_size' // CRITICAL: 'data' maps to 'data_size'
+          }[genericKey] || genericKey;
+
+          // Trim all string values and save to the final data object
+          data[finalKey] = (typeof rawData[key] === 'string') ? rawData[key].trim() : rawData[key];
+      }
+      // --- END: Data Harmonization ---
+
+
+      if(msgEl) msgEl.textContent = 'Submitting...';
+
+      try {
+        const res = await fetch('http://localhost:5000/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if(!res.ok){
+          const json = await res.json();
+          if(msgEl) msgEl.textContent = json.message || 'Server error: ' + res.statusText;
+          return;
+        }
+        const json = await res.json();
+        if(json.success){
+          if(msgEl) msgEl.textContent = 'Registration successful — redirecting...';
+          setTimeout(()=> location.href = 'login.html', 1200);
+        } else {
+          if(msgEl) msgEl.textContent = json.message || 'Registration failed.';
+        }
+      } catch (err){
+        if(msgEl) msgEl.textContent = 'Network error. Please try again later.';
+      }
+    }
+
+    document.querySelectorAll('input[type=number]').forEach(inp => inp.addEventListener('wheel', (ev)=> ev.target.blur()));
+  </script>
+</body>
+</html>
