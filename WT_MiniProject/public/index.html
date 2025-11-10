@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scrutiny | Where Data Finds Its Direction</title>
 
-    <!-- CSS -->
     <link rel="stylesheet" href="css/style.css">
 
-    <!-- Fonts & Animation Libraries -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -19,15 +17,103 @@
             text-align: center;
             padding: 40px 20px;
         }
-        .about p {
-            max-width: 800px;
-            margin: 0 auto;
+        
+        /* --- FEATURE GRID STYLES --- */
+        .feature-grid {
+            max-width: 1100px;
+            margin: 40px auto;
+            text-align: left;
+        }
+
+        .feature-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+            margin-bottom: 60px;
+        }
+
+        /* Alternating layout */
+        .feature-item:nth-child(even) .feature-content:first-child {
+            order: 2;
+        }
+        .feature-item:nth-child(even) .feature-content:last-child {
+            order: 1;
+        }
+
+        /* Feature Card Styling with Hover Effect */
+        .feature-card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: var(--round);
+            border: 1px solid rgba(0,0,0,0.04);
+            box-shadow: 0 5px 15px var(--shadow);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px); 
+            box-shadow: 0 20px 40px rgba(33,145,123,0.3); 
+        }
+
+        .feature-card h3 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .feature-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: var(--round);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .feature-item {
+                grid-template-columns: 1fr; 
+                gap: 20px;
+            }
+            .feature-item .feature-content:first-child {
+                order: 2 !important;
+            }
+            .feature-item .feature-content:last-child {
+                order: 1 !important;
+            }
+        }
+        
+        /* --- SUBTLE QUICKFIX STYLES --- */
+        /* Animation for a subtle pulse/float */
+        @keyframes subtle-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(255, 215, 0, 0); }
+        }
+
+        .quickfix-btn-subtle {
+            /* Keep original dimensions/font/color but modify background/border for emphasis */
+            background: #ebdf9b !important; /* Soft Gold Base */
+            border: 1px solid #c18413 !important; 
+            color: var(--text) !important; /* Use theme text color for professionalism */
+            font-weight: 600 !important; /* Keep consistent with other buttons in style.css */
+            
+            /* Add subtle pulse animation */
+            animation: subtle-pulse 2s infinite ease-out;
+            transition: all 0.2s ease; /* Ensure quick hover response */
+        }
+        
+        .quickfix-btn-subtle:hover {
+            background: #eea825 !important; /* Slightly deeper gold on hover */
+            color: #ffffff !important; /* White text for contrast on hover */
+            transform: translateY(-2px) !important; /* Inherits the standard nav hover lift */
         }
     </style>
 </head>
 
 <body>
-<!-- NAVBAR -->
 <nav>
 <div class="logo-container">
     <img src="assets/logo.png" alt="Scrutiny Logo" class="nav-logo">
@@ -38,11 +124,10 @@
         <button onclick="location.href='login.html'">Login</button>
         <button onclick="location.href='signup.html'">Signup</button>
         <button onclick="location.href='contact.html'">Contact Us</button>
-        <button onclick="location.href='quickfix.html'">QuickFix</button>
+        <button onclick="location.href='quickfix.html'" class="quickfix-btn-subtle">QUICK FIX</button>
     </div>
 </nav>
 
-<!-- HERO SECTION (Background is var(--bg)) -->
 <section class="hero" data-aos="fade-up" data-aos-duration="1200">
     <h1>Where Data Finds Its Direction</h1>
     <p>
@@ -51,31 +136,57 @@
     <button class="cta-btn" onclick="location.href='signup.html'">Get Started</button>
 </section>
 
-<!-- PART 1 FIX: Container for white background -->
-    <!-- ABOUT SECTION -->
-     <div class="section-container">
+<div class="section-container">
         <br>
     
-
     
-  
-    <section class="about" data-aos="zoom-in" data-aos-delay="300" data-aos-duration="1200">
-        <h2>About Scrutiny</h2>
-        <p>
-            Scrutiny is your trusted platform connecting businesses with expert data analysts. 
-            We empower companies to make data-driven decisions by providing access to a curated 
-            network of skilled professionals. Whether you're seeking advanced analytics, predictive 
-            modeling, or business intelligence solutions, Scrutiny ensures seamless collaboration 
-            with transparent profiles, verified credentials, and tools like QuickFix for instant support.
-        </p>
-    </section>
+     <section class="about" data-aos="zoom-in" data-aos-delay="300" data-aos-duration="1200">
+        <h2>What Scrutiny Offers</h2>
+        <div class="feature-grid">
 
+            <div class="feature-item" data-aos="fade-right">
+                <div class="feature-content">
+                    <div class="feature-card">
+                        <h3>1. Curated Analyst Network</h3>
+                        <p>Access verified data agencies, startups, and expert consultants globally. Find the right specialist for predictive modeling, business intelligence, and advanced analytics projects effortlessly.</p>
+                    </div>
+                </div>
+                <div class="feature-content">
+                    <img src="assets/images.jpeg" alt="Professional network connecting analysts and enterprises" class="feature-image">
+                </div>
+            </div>
+
+            <div class="feature-item" data-aos="fade-left">
+                <div class="feature-content">
+                    <img src="assets/images (2).jpeg" alt="Graphs and charts representing data-driven decisions" class="feature-image">
+                </div>
+                <div class="feature-content">
+                    <div class="feature-card">
+                        <h3>2. Focused Project Collaboration</h3>
+                        <p>Streamline project initiation, communication, and delivery. Our integrated system facilitates transparent request handling, acceptance/rejection flows, and peer rating for quality assurance.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="feature-item" data-aos="fade-right">
+                <div class="feature-content">
+                    <div class="feature-card">
+                        <h3>3. Instant Insight (QuickFix)</h3>
+                        <p>Get immediate statistical summaries and dynamic data visualizations by uploading your CSV file to our QuickFix tool. Perfect for rapid initial assessments and troubleshooting data issues instantly.</p>
+                    </div>
+                </div>
+                <div class="feature-content">
+                    <img src="assets/images (1).jpeg" alt="Digital collaboration interface" class="feature-image">
+                </div>
+            </div>
+
+        </div>
+    </section>
 
 
 </div>
 
     
-<!-- FOOTER -->
 <footer>
     <p>Made by Team Scrutiny — Sharanya R, Ramya H R, Amay Halapeti</p>
 </footer>
