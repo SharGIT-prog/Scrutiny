@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>QuickFix | Scrutiny Data Analysis</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-    
     <style>
         /* ====== Scrutiny — Professional Turquoise Theme (Light, flat) ====== */
         :root{
@@ -22,7 +21,6 @@
             --focus-ring: rgba(94,177,160,0.22);
         }
 
-        /* ====== Base ====== */
         * { box-sizing: border-box; }
         html, body { height: 100%; margin: 0; font-family: 'Poppins', sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
         body {
@@ -30,16 +28,11 @@
             color: var(--text);
             font-size: 16px;
             line-height: 1.4;
-            -webkit-font-smoothing:antialiased;
             transition: background-color .2s ease, color .2s ease;
         }
 
-        @keyframes pageFade {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes pageFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0);} }
 
-        /* ====== Navbar ====== */
         nav {
             background: var(--card);
             padding: 14px 28px;
@@ -65,18 +58,14 @@
             box-shadow: 0 8px 22px rgba(33,145,123,0.12);
         }
 
-        /* ====== Buttons/CTA ====== */
         .action-btn {
             padding:12px 28px; border-radius:10px; border:none;
             background: var(--primary); color: #fff; font-weight:700; cursor:pointer;
             transition: transform .18s ease, box-shadow .18s ease;
         }
         .action-btn:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(33,145,123,0.14); }
-        .primary-btn {
-            background: var(--primary);
-        }
-        
-        /* ====== Cards / Panels ====== */
+        .primary-btn { background: var(--primary); }
+
         .card, .stats-card, .plot-card { 
             background: var(--card);
             border-radius: var(--round);
@@ -85,9 +74,8 @@
             box-shadow: 0 10px 30px var(--shadow);
             animation: pageFade .36s ease both;
         }
-        .stats-card, .plot-card { padding: 30px; } 
+        .stats-card, .plot-card { padding: 20px; } 
 
-        /* ====== Form controls (Used for file input/select) ====== */
         input, textarea, select {
             width:100%;
             padding:10px 12px;
@@ -105,173 +93,95 @@
             transform: translateY(-1px);
         }
 
-        /* footer */
         footer { text-align:center; padding:18px 10px; color:var(--muted); }
 
+        .analysis-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; animation: pageFade .5s ease both; }
+        .header-section { text-align: center; margin-bottom: 24px; }
+        .header-section h1 { color: var(--primary); font-weight:700; font-size:2.1rem; margin-bottom:6px; }
+        .header-section p { color: var(--muted); font-size:1.02rem; margin-top:0; }
 
-        /* ============================================== */
-        /* ====== QuickFix Analysis Page Specifics ====== */
-        /* ============================================== */
-
-        /* Main Analysis Layout */
-        .analysis-container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-            animation: pageFade .5s ease both;
-        }
-
-        .header-section {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .header-section h1 {
-            color: var(--primary); 
-            font-weight: 700;
-            font-size: 2.2rem;
-            margin-bottom: 8px;
-        }
-
-        .header-section p {
-            color: var(--muted);
-            font-size: 1.05rem;
-        }
-
-        /* Upload and Controls Layout */
         .upload-controls-section {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            margin-bottom: 30px;
+            padding: 14px;
+            margin-bottom: 18px;
             background: var(--card);
             border-radius: var(--round);
             box-shadow: 0 8px 25px var(--shadow);
             border: 1px solid rgba(0,0,0,0.05);
+            gap: 12px;
         }
 
-        .upload-box {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+        .upload-box { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        .file-input { padding: 10px 14px; border: 1px solid var(--primary-3); border-radius: var(--round); background-color: var(--bg); color: var(--text); width:auto; cursor:pointer; }
+
+        #analyzeButton { padding: 10px 18px; height:44px; }
+
+        /* MODIFICATION: Change plot-controls layout for new line */
+        .plot-controls { 
+            display:flex; 
+            flex-wrap: wrap; /* Allows wrapping */
+            align-items: flex-start; /* Aligns items to the start of the cross axis */
+            gap: 12px; 
+            max-width: 100%; /* Ensures controls don't exceed container width */
         }
-
-        /* Custom File Input Styling */
-        .file-input {
-            padding: 10px 14px;
-            border: 1px solid var(--primary-3);
-            border-radius: var(--round);
-            background-color: var(--bg); 
-            color: var(--text);
-            width: auto; 
-            max-width: 300px; 
-            cursor: pointer;
-            transition: all .2s ease;
+        /* New line break for Column / X: and Y: selectors */
+        .plot-controls .control-group { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            flex-wrap: wrap; 
         }
-
-        .file-input:hover {
-            border-color: var(--primary);
-            box-shadow: 0 4px 10px rgba(33,145,123,0.1);
+        .plot-controls .control-group.second-row {
+            flex-basis: 100%; /* Forces the second group to a new line */
+            margin-top: 8px;
         }
+        .plot-controls label { font-weight:600; color:var(--muted); font-size:0.95rem; margin-bottom:0; }
+        .control-select { padding:8px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.1); background-color:var(--bg); width:170px; }
 
-        /* Primary Analysis Button (Action Button) */
-        #analyzeButton {
-            padding: 10px 24px;
-            height: 44px; 
-            font-size: 1rem;
+        /* MODIFICATION: Change results-area grid to single column layout */
+        .results-area { 
+            display:grid; 
+            grid-template-columns: 1fr; /* Single column layout */
+            gap:20px; 
+            align-items:start; 
         }
+        .stats-card h2, .plot-card h2 { color: var(--primary); margin-top:0; border-bottom:1px solid rgba(0,0,0,0.06); padding-bottom:8px; margin-bottom:12px; font-size:1.2rem; font-weight:600; }
 
-        /* Plot Controls Styling (Dropdowns) */
-        .plot-controls {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            background-color: transparent; 
-            padding: 0;
-            border-radius: var(--round);
-        }
+        .stats-grid { display:flex; gap:12px; flex-wrap:wrap; }
+        .stat-box { background: linear-gradient(180deg, rgba(255,255,255,0.9), var(--card)); padding:12px; border-radius:10px; min-width:140px; border:1px solid rgba(0,0,0,0.04); box-shadow: 0 8px 18px rgba(0,0,0,0.03); }
+        .stat-box strong { color:var(--primary); display:block; margin-bottom:6px; }
 
-        .plot-controls label {
-            font-weight: 600;
-            color: var(--muted);
-            margin-bottom: 0;
-            font-size:0.95rem; 
-        }
+        .table-scroll { max-height:320px; overflow:auto; margin-top:12px; border-radius:8px; border:1px solid rgba(0,0,0,0.04); }
+        table { width:100%; border-collapse:collapse; font-size:0.92rem; }
+        th, td { padding:8px 10px; border-bottom:1px solid rgba(0,0,0,0.04); text-align:left; }
+        th { background: rgba(33,145,123,0.04); color:var(--muted); font-weight:600; position:sticky; top:0; }
 
-        .control-select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(0,0,0,0.1);
-            background-color: var(--bg);
-            color: var(--text);
-            cursor: pointer;
-            transition: border-color .15s ease;
-            width: 150px; 
-        }
+        #myChart { max-height:520px; width:100% !important; height:420px !important; display:block; background:transparent; }
 
-        .control-select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--focus-ring);
-        }
+        .heatmap-grid { display:grid; gap:6px; overflow:auto; padding:8px; border-radius:8px; }
+        .heatmap-cell { padding:6px 8px; text-align:center; border-radius:6px; color:#fff; font-weight:600; }
 
-
-        /* Results Area (Grid and Cards) */
-        .results-area {
-            display: grid;
-            grid-template-columns: 1fr 2fr; 
-            gap: 24px;
-        }
-
-        .stats-card h2, .plot-card h2 {
-            color: var(--primary);
-            margin-top: 0;
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-            font-size: 1.4rem;
-            font-weight: 600;
-        }
-
-        .stats-card p {
-            margin: 8px 0;
-            font-size: 0.98rem;
-            color: var(--text);
-        }
-
-        .stats-card strong {
-            color: var(--primary);
-            font-weight: 600;
-        }
-
-        /* Chart Canvas Styling */
-        #myChart {
-            max-height: 450px; 
-            width: 100% !important;
-            height: auto !important;
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 900px) {
-            .results-area {
-                grid-template-columns: 1fr; 
-            }
-            .upload-controls-section {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 20px;
-            }
-            .plot-controls {
-                width: 100%;
-                flex-wrap: wrap;
-                padding: 0;
-                gap: 15px;
+        @media (max-width:900px) {
+            /* Results area is already single column */
+            .upload-controls-section { flex-direction:column; align-items:flex-start; }
+            .plot-controls { width:100%; }
+            .plot-controls .control-group { width: 100%; }
+            .plot-controls label, .control-select { flex-basis: auto; width: 48%; }
+            .plot-controls label { width: auto; }
+            .control-select { max-width: calc(50% - 12px); }
+            /* Adjustments for the new-line control groups on mobile */
+            .plot-controls .control-group.second-row > label,
+            .plot-controls .control-group.second-row > select {
+                width: auto;
+                max-width: none;
             }
         }
+
     </style>
 </head>
 <body>
-
 <nav class="navbar">
     <div class="logo">Scrutiny</div>
     <div class="nav-links">
@@ -285,251 +195,749 @@
 <main class="analysis-container">
     <header class="header-section">
         <h1>QuickFix Data Analysis ⚡</h1>
-        <p>Upload your CSV file below for instant statistical insights and dynamic plotting.</p>
+        <p>Upload your CSV file below for instant statistical insights and dynamic plotting. (Client-side analysis is included.)</p>
     </header>
 
     <section class="upload-controls-section">
         <div class="upload-box">
             <input type="file" id="csvFileInput" accept=".csv" class="file-input">
             <button id="analyzeButton" class="action-btn primary-btn" onclick="analyzeData()">Analyze CSV</button>
+            <small id="uploadHint" style="color:var(--muted); margin-left:8px;">Works offline — no server required for basic analysis.</small>
         </div>
-        
-        <div class="plot-controls" id="plotControls" style="display: none;">
-            <label for="plotTypeSelect">Plot Type:</label>
-            <select id="plotTypeSelect" class="control-select" onchange="renderPlot()">
-                <option value="bar">Bar Chart (Distribution)</option>
-                <option value="line">Line Chart (Trend)</option>
-                <option value="scatter">Scatter Plot (Relationship)</option>
-            </select>
 
-            <label for="columnSelect">Column:</label>
-            <select id="columnSelect" class="control-select" onchange="renderPlot()">
+        <div class="plot-controls" id="plotControls" style="display:none;">
+            <div class="control-group first-row">
+                <label for="plotTypeSelect">Plot Type:</label>
+                <select id="plotTypeSelect" class="control-select" onchange="onPlotTypeChange(); renderPlot();">
+                    <option value="bar">Bar (Categorical distribution)</option>
+                    <option value="line">Line (Category trend)</option>
+                    <option value="hist">Histogram</option>
+                    <option value="scatter">Scatter (X vs Y)</option>
+                    <option value="qq">Q–Q Plot (normal)</option>
+                    <option value="corr">Correlation Heatmap</option>
                 </select>
-        </div>
+            </div>
+
+            <div class="control-group second-row">
+                <label for="columnSelect">Column / X:</label>
+                <select id="columnSelect" class="control-select" onchange="renderPlot()"></select>
+    
+                <label for="columnSelectY" id="labelY" style="display:none;">Y:</label>
+                <select id="columnSelectY" class="control-select" style="display:none;" onchange="renderPlot()"></select>
+            </div>
+            </div>
     </section>
 
     <section class="results-area">
         <div id="statsOutput" class="stats-card">
             <h2>Summary Statistics</h2>
-            <p>Upload a file to begin analysis.</p>
+            <p id="statsIntro">Upload a file to begin analysis.</p>
+
+            <div id="overallStats" style="margin-top:10px;"></div>
+
+            <div id="perColumnStats" class="table-scroll" style="display:none; margin-top:12px;">
+                <table id="statsTable">
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Type</th>
+                            <th>Count</th>
+                            <th>Missing</th>
+                            <th>Mean</th>
+                            <th>Median</th>
+                            <th>Mode</th>
+                            <th>Std Dev</th>
+                            <th>Variance</th>
+                            <th>Min</th>
+                            <th>25%</th>
+                            <th>75%</th>
+                            <th>Max</th>
+                            <th>Range</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="plotArea" class="plot-card" style="display:none;">
+            <h2>Data Visualization</h2>
+            <div style="position:relative;">
+                <canvas id="myChart"></canvas>
             </div>
 
-        <div id="plotArea" class="plot-card" style="display: none;">
-            <h2>Data Visualization</h2>
-            <canvas id="myChart"></canvas>
+            <div id="heatmapLegend" style="margin-top:10px; display:none;">
+                <small style="color:var(--muted);">Correlation color scale: -1 (red) → 0 (neutral) → +1 (green)</small>
+            </div>
+
+            <div id="heatmapContainer" style="margin-top:12px; display:none;"></div>
         </div>
     </section>
-
-</main>
+    </main>
 
 <footer>
     <p>© Team Scrutiny | 2025</p>
 </footer>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        
-        // Global variables for analysis results and chart instance
-        let globalAnalysisResults = {};
-        let myChart = null;
-        
-        // Theme Color Variables
-        const primaryChartColor = '#21917b'; 
-        const primaryChartColorAlpha = 'rgba(33, 145, 123, 0.8)'; 
+/* =========================
+   Utilities & CSV parsing
+   ========================= */
 
-        /**
-         * The main function to send the CSV file to the backend API for analysis.
-         */
-        window.analyzeData = async function() { 
-            const fileInput = document.getElementById('csvFileInput');
-            const file = fileInput.files[0];
-            const statsOutput = document.getElementById('statsOutput');
-            const plotArea = document.getElementById('plotArea');
-            const columnSelect = document.getElementById('columnSelect');
-            const plotControls = document.getElementById('plotControls');
+function parseCSV(text) {
+    // Basic CSV parser that handles quoted fields and commas.
+    // Returns { headers: [], rows: [ {col: value, ...}, ... ] }
+    const rows = [];
+    const lines = text.split(/\r\n|\n/).filter(l => l.trim().length > 0);
+    if (lines.length === 0) return { headers: [], rows: [] };
 
-            if (!file) {
-                alert('Please select a CSV file.');
-                return;
-            }
-
-            // 1. Setup Request and UI
-            const formData = new FormData();
-            formData.append('file', file); 
-
-            statsOutput.innerHTML = '<h2>Analyzing... 🚀</h2><p>Please wait, uploading and processing data on the server...</p>';
-            plotArea.style.display = 'none';
-            plotControls.style.display = 'none';
-
-            try {
-                // 2. Send request to your live Express backend on port 5000
-                const response = await fetch('http://localhost:5000/api/analyze', { 
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    let errorMessage = `Server analysis failed with status ${response.status}.`;
-                    try {
-                        const errorData = JSON.parse(errorText);
-                        errorMessage = errorData.error || errorMessage;
-                    } catch (e) {
-                        errorMessage = errorText;
-                    }
-                    throw new Error(errorMessage);
-                }
-
-                // 3. Process the real analysis results
-                const analysisResults = await response.json();
-                globalAnalysisResults = analysisResults; 
-                
-                // Find the first numerical column for initial stats display
-                const numericalColumn = analysisResults.columns.find(col => analysisResults.stats[col]);
-                const numericalStats = numericalColumn ? analysisResults.stats[numericalColumn] : null;
-
-                // 4. Update Stats Output
-                if (numericalStats) {
-                    // Conditional styling for profit status
-                    const profitColor = numericalStats.profit_status.includes('Positive') ? 'var(--primary)' : '#d04545';
-                    statsOutput.innerHTML = `
-                        <h2>Summary Statistics</h2>
-                        <p><strong>Total Records:</strong> ${analysisResults.recordCount}</p>
-                        <h3>${numericalColumn} Metrics</h3>
-                        <p><strong>Mean ${numericalColumn}:</strong> ${numericalStats.mean.toFixed(2)}</p>
-                        <p><strong>Median ${numericalColumn}:</strong> ${numericalStats.median.toFixed(2)}</p>
-                        <p><strong>Mode ${numericalColumn}:</strong> ${numericalStats.mode}</p>
-                        <p><strong>Profit Status:</strong> <span style="color: ${profitColor};"><strong>${numericalStats.profit_status}</strong></span></p>
-                        <p><strong>Overall Trend:</strong> ${numericalStats.trend}</p> 
-                    `;
-                } else {
-                     statsOutput.innerHTML = `<h2>Summary Statistics</h2><p>Analysis complete. Found ${analysisResults.recordCount} records, but no numerical columns for standard metrics were detected.</p>`;
-                }
-
-
-                // 5. Populate Column Selector (FIXED: Includes all columns)
-                const allColumns = analysisResults.columns;
-                columnSelect.innerHTML = allColumns
-                    .map(col => `<option value="${col}">${col}</option>`)
-                    .join('');
-
-
-                // 6. Show Controls and Render Plot
-                if (allColumns.length > 0) {
-                    plotControls.style.display = 'flex';
-                    plotArea.style.display = 'block';
-                    
-                    columnSelect.value = allColumns[0]; 
-                    renderPlot();
-                } else {
-                    plotArea.style.display = 'none';
-                }
-
-            } catch (error) {
-                console.error('Front-end analysis integration error:', error);
-                statsOutput.innerHTML = `<h2>Analysis Failed 🛑</h2><p>Error: ${error.message}</p><p>Please ensure your Node.js server is running on port 5000 and check its console for details.</p>`;
-            }
-        };
-
-        /**
-         * Renders the Chart.js plot based on selected column and type.
-         * FIXED: Now handles both numerical (showing N/A for 1D plots) and categorical columns.
-         */
-        window.renderPlot = function() { 
-            if (myChart) {
-                myChart.destroy(); 
-            }
-            
-            const column = document.getElementById('columnSelect').value;
-            const plotType = document.getElementById('plotTypeSelect').value;
-            const ctx = document.getElementById('myChart').getContext('2d');
-            
-            // Check if the column is numerical (has stats)
-            const isNumerical = globalAnalysisResults.stats[column] !== undefined;
-            
-            let labels;
-            let counts;
-
-            if (isNumerical) {
-                // If the column is numerical, we don't have binned data for a 1D chart.
-                // Display a fallback message if a numerical column is selected for plotting.
-                labels = ['N/A'];
-                counts = [0]; 
-                
-                // Clear the canvas and show a message
-                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-                ctx.font = "16px Poppins";
-                ctx.fillStyle = "var(--muted)";
-                ctx.fillText("Select a Categorical Column (e.g., Department, Gender) for Bar/Line plots.", 10, 50);
-                
-                // If you want a real Scatter Plot of two numerical variables, you need a second dropdown
-                // and logic to grab the raw data for both columns.
-                return;
-
+    // Naive but robust split that handles quoted commas
+    function splitLine(line) {
+        const cells = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === '"' ) {
+                if (inQuotes && line[i+1] === '"') { cur += '"'; i++; } // escaped quote
+                else inQuotes = !inQuotes;
+            } else if (ch === ',' && !inQuotes) {
+                cells.push(cur);
+                cur = '';
             } else {
-                // Categorical data (Distribution/Bar Chart is the only sensible default)
-                const plotData = globalAnalysisResults.plotData[column];
-                if (!plotData) return;
-                
-                labels = plotData.map(item => item.category);
-                counts = plotData.map(item => item.count);
+                cur += ch;
             }
-            
-            // --- Core Dataset Configuration ---
-            const datasetConfig = {
-                label: `Count of ${column}`,
-                data: counts,
-                borderColor: primaryChartColor,
-                borderWidth: plotType === 'line' ? 3 : 1, 
-                animation: {
-                    duration: 1000,
-                    easing: 'easeInOutQuad' 
+        }
+        cells.push(cur);
+        return cells;
+    }
+
+    const headers = splitLine(lines[0]).map(h => h.trim());
+    for (let r = 1; r < lines.length; r++) {
+        const cells = splitLine(lines[r]);
+        // pad if fewer cells
+        while (cells.length < headers.length) cells.push('');
+        const obj = {};
+        for (let c = 0; c < headers.length; c++) {
+            obj[headers[c]] = (cells[c] === undefined ? '' : cells[c].trim());
+        }
+        rows.push(obj);
+    }
+    return { headers, rows };
+}
+
+/* =========================
+   Stats functions (numeric)
+   ========================= */
+
+function isNumericArray(arr) {
+    return arr.every(v => v === null || v === undefined || v === '' || (!isNaN(+v)));
+}
+
+function toNumberSafe(x) {
+    const n = +x;
+    return isFinite(n) ? n : NaN;
+}
+
+function numericValues(arr) {
+    // convert and filter out NaN
+    return arr.map(toNumberSafe).filter(v => !isNaN(v));
+}
+
+function mean(arr) {
+    if (!arr.length) return NaN;
+    return arr.reduce((a,b)=>a+b,0)/arr.length;
+}
+
+function median(arr) {
+    if (!arr.length) return NaN;
+    const s = arr.slice().sort((a,b)=>a-b);
+    const m = Math.floor((s.length-1)/2);
+    return s.length % 2 ? s[m] : (s[m] + s[m+1]) / 2;
+}
+
+function mode(arr) {
+    if (!arr.length) return null;
+    const freq = {};
+    let max = 0, modeVal = null;
+    arr.forEach(v => {
+        freq[v] = (freq[v]||0) + 1;
+        if (freq[v] > max) { max = freq[v]; modeVal = v; }
+    });
+    // modeVal might be number; return as is
+    return modeVal;
+}
+
+function variance(arr) {
+    if (!arr.length) return NaN;
+    const m = mean(arr);
+    return arr.reduce((s,v)=> s + Math.pow(v - m, 2), 0) / arr.length;
+}
+
+function stddev(arr) { return Math.sqrt(variance(arr)); }
+
+function quantile(arr, q) {
+    if (!arr.length) return NaN;
+    const s = arr.slice().sort((a,b)=>a-b);
+    const pos = (s.length - 1) * q;
+    const base = Math.floor(pos);
+    const rest = pos - base;
+    if (s[base + 1] !== undefined) return s[base] + rest * (s[base+1] - s[base]);
+    return s[base];
+}
+
+function min(arr) { if (!arr.length) return NaN; return Math.min(...arr); }
+function max(arr) { if (!arr.length) return NaN; return Math.max(...arr); }
+function rangeVal(arr) { return isNaN(min(arr)) || isNaN(max(arr)) ? NaN : max(arr) - min(arr); }
+
+/* Correlation (Pearson) between two numeric arrays of equal length */
+function pearson(x, y) {
+    const n = Math.min(x.length, y.length);
+    if (n === 0) return NaN;
+    const xbar = mean(x);
+    const ybar = mean(y);
+    const num = x.reduce((s, xi, i) => s + ((xi - xbar) * (y[i] - ybar)), 0);
+    const den = Math.sqrt(x.reduce((s, xi)=> s + Math.pow(xi - xbar, 2), 0) * y.reduce((s, yi)=> s + Math.pow(yi - ybar, 2), 0));
+    if (den === 0) return NaN;
+    return num / den;
+}
+
+/* Normal quantile approximation (inverse CDF) using Beasley-Springer-Moro approx */
+function normalQuantile(p) {
+    // for 0<p<1. Use simple approximation; accurate enough for plotting Q-Q
+    if (p <=0 || p>=1) return NaN;
+    // use inverse error function approach
+    // simpler: use approximation from Abramowitz-Stegun; for our needs it's fine
+    let a1 = -39.6968302866538, a2 = 220.946098424521, a3 = -275.928510446969;
+    let a4 = 138.357751867269, a5 = -30.6647980661472, a6 = 2.50662827745924;
+    let b1 = -54.4760987982241, b2 = 161.585836858041, b3 = -155.698979859887;
+    let b4 = 66.8013118877197, b5 = -13.2806815528857;
+    let c1 = -0.00778489400243029, c2 = -0.322396458041136, c3 = -2.40075827716184;
+    let c4 = -2.54973253934373, c5 = 4.37466414146497, c6 = 2.93816398269878;
+    let d1 = 0.00778469570904146, d2 = 0.32246712907004, d3 = 2.445134137143;
+    let d4 = 3.75440866190742;
+    let plow = 0.02425, phigh = 1 - plow;
+    let q, r;
+    if (p < plow) {
+        q = Math.sqrt(-2*Math.log(p));
+        return (((((c1*q + c2)*q + c3)*q + c4)*q + c5)*q + c6) /
+               ((((d1*q + d2)*q + d3)*q + d4)*q + 1);
+    } else if (phigh < p) {
+        q = Math.sqrt(-2*Math.log(1-p));
+        return -(((((c1*q + c2)*q + c3)*q + c4)*q + c5)*q + c6) /
+                ((((d1*q + d2)*q + d3)*q + d4)*q + 1);
+    } else {
+        q = p - 0.5;
+        r = q*q;
+        return (((((a1*r + a2)*r + a3)*r + a4)*r + a5)*r + a6)*q /
+               (((((b1*r + b2)*r + b3)*r + b4)*r + b5)*r + 1);
+    }
+}
+
+/* =========================
+   DOM & Global state
+   ========================= */
+
+let globalData = {
+    headers: [],
+    rows: [],
+    colTypes: {},     // 'numeric' or 'categorical'
+    columnValues: {}, // raw arrays per column (strings)
+    numericCache: {}, // numeric arrays per column
+    plotData: {},     // distributions per column (for categorical)
+    stats: {},        // computed stats per column
+    recordCount: 0
+};
+
+let chartInstance = null;
+
+/* =========================
+   Analysis & rendering
+   ========================= */
+
+async function analyzeData() {
+    const fileInput = document.getElementById('csvFileInput');
+    const file = fileInput.files[0];
+    const statsIntro = document.getElementById('statsIntro');
+    const statsTableBody = document.getElementById('statsTableBody');
+    const perColumnStats = document.getElementById('perColumnStats');
+    const plotArea = document.getElementById('plotArea');
+    const plotControls = document.getElementById('plotControls');
+    const columnSelect = document.getElementById('columnSelect');
+    const columnSelectY = document.getElementById('columnSelectY');
+
+    if (!file) {
+        alert('Please select a CSV file.');
+        return;
+    }
+
+    statsIntro.innerHTML = 'Analyzing... 🚀 Uploading & parsing the CSV locally (and will attempt server if available).';
+    perColumnStats.style.display = 'none';
+    plotArea.style.display = 'none';
+    plotControls.style.display = 'none';
+
+    // Read file client-side
+    const text = await file.text();
+    const parsed = parseCSV(text);
+    globalData.headers = parsed.headers;
+    globalData.rows = parsed.rows;
+    globalData.recordCount = parsed.rows.length;
+    computeColumnValues();
+    computeColumnTypesAndStats();
+
+    // Update UI with computed stats
+    renderStatsTable();
+    populateColumnSelectors();
+
+    // Attempt backend call too (non-blocking) to preserve original behavior
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await fetch('http://localhost:5000/api/analyze', { method: 'POST', body: formData });
+        if (response.ok) {
+            const serverResults = await response.json();
+            // If server returns stats and plotData similar to previous expectations, merge minimally
+            // We'll trust client-side for display. If you want server results reflected, adapt here.
+            console.log('Server analysis returned successfully (not replacing client analysis).', serverResults);
+        } else {
+            const textErr = await response.text();
+            console.warn('Server analysis failed:', response.status, textErr);
+        }
+    } catch (err) {
+        console.warn('Server analysis unreachable (client-side worked):', err.message);
+    }
+
+    statsIntro.innerHTML = `<strong>Rows:</strong> ${globalData.recordCount} • <strong>Columns:</strong> ${globalData.headers.length}`;
+    document.getElementById('plotArea').style.display = 'block';
+    plotControls.style.display = 'flex';
+    plotArea.style.display = 'block';
+    onPlotTypeChange();
+    renderPlot();
+}
+
+/* Build columnValues and basic caches */
+function computeColumnValues() {
+    const headers = globalData.headers;
+    globalData.columnValues = {};
+    for (const h of headers) {
+        globalData.columnValues[h] = globalData.rows.map(r => (r[h] !== undefined ? r[h] : ''));
+    }
+}
+
+/* Determine type and compute stats per column */
+function computeColumnTypesAndStats() {
+    const headers = globalData.headers;
+    globalData.colTypes = {};
+    globalData.numericCache = {};
+    globalData.stats = {};
+
+    for (const col of headers) {
+        const vals = globalData.columnValues[col];
+        const missing = vals.filter(v => v === '' || v === null || v === undefined).length;
+        const numericCandidates = vals.filter(v => v !== '' && !isNaN(+v));
+        const numericArr = numericValues(vals);
+        const isNumeric = numericArr.length > 0 && (numericArr.length + missing === vals.length || numericArr.length / (vals.length - missing + 1) > 0.5);
+        globalData.colTypes[col] = isNumeric ? 'numeric' : 'categorical';
+        globalData.numericCache[col] = (isNumeric ? numericArr : []);
+        // For categorical distribution
+        if (!globalData.plotData) globalData.plotData = {};
+        if (globalData.colTypes[col] === 'categorical') {
+            const freq = {};
+            vals.forEach(v => {
+                const key = v === '' ? '(missing)' : v;
+                freq[key] = (freq[key] || 0) + 1;
+            });
+            // Convert to sorted array by count desc
+            const dist = Object.keys(freq).map(k => ({ category: k, count: freq[k] })).sort((a,b)=>b.count - a.count);
+            globalData.plotData[col] = dist;
+        } else {
+            // for numeric columns we might provide histogram bins later
+            globalData.plotData[col] = null;
+        }
+
+        // compute stats
+        const arr = globalData.numericCache[col];
+        const s = {
+            type: globalData.colTypes[col],
+            count: vals.length,
+            missing: missing,
+            mean: arr.length ? mean(arr) : null,
+            median: arr.length ? median(arr) : null,
+            mode: arr.length ? mode(arr) : (vals.length ? mode(vals.filter(v=>v!=='').map(v=>v)) : null),
+            std: arr.length ? stddev(arr) : null,
+            variance: arr.length ? variance(arr) : null,
+            min: arr.length ? min(arr) : null,
+            max: arr.length ? max(arr) : null,
+            q25: arr.length ? quantile(arr, 0.25) : null,
+            q75: arr.length ? quantile(arr, 0.75) : null,
+            range: arr.length ? rangeVal(arr) : null,
+        };
+        globalData.stats[col] = s;
+    }
+
+    // Overall dataset stats (overall mean & median across all numeric columns combined)
+    const combined = [];
+    for (const col of headers) {
+        if (globalData.colTypes[col] === 'numeric') combined.push(...globalData.numericCache[col]);
+    }
+    globalData.overall = {
+        numericColumns: headers.filter(h => globalData.colTypes[h] === 'numeric'),
+        overall_count: globalData.recordCount,
+        overall_numeric_count: combined.length,
+        overall_mean: combined.length ? mean(combined) : null,
+        overall_median: combined.length ? median(combined) : null,
+        overall_std: combined.length ? stddev(combined) : null,
+    };
+}
+
+/* Render stats table and overall cards */
+function renderStatsTable() {
+    const statsTableBody = document.getElementById('statsTableBody');
+    statsTableBody.innerHTML = '';
+    const headers = globalData.headers;
+    for (const col of headers) {
+        const s = globalData.stats[col];
+        const tr = document.createElement('tr');
+        function fmt(v) {
+            if (v === null || v === undefined || Number.isNaN(v)) return 'N/A';
+            if (typeof v === 'number') return (Math.abs(v) >= 1e6 || Math.abs(v) < 0.0001) ? v.toPrecision(6) : (Math.round(v * 100) / 100).toString();
+            return String(v);
+        }
+        tr.innerHTML = `<td>${col}</td>
+                        <td>${s.type}</td>
+                        <td>${s.count}</td>
+                        <td>${s.missing}</td>
+                        <td>${fmt(s.mean)}</td>
+                        <td>${fmt(s.median)}</td>
+                        <td>${fmt(s.mode)}</td>
+                        <td>${fmt(s.std)}</td>
+                        <td>${fmt(s.variance)}</td>
+                        <td>${fmt(s.min)}</td>
+                        <td>${fmt(s.q25)}</td>
+                        <td>${fmt(s.q75)}</td>
+                        <td>${fmt(s.max)}</td>
+                        <td>${fmt(s.range)}</td>`;
+        statsTableBody.appendChild(tr);
+    }
+    document.getElementById('perColumnStats').style.display = '';
+    // Overall stats card
+    const overallElem = document.getElementById('overallStats');
+    overallElem.innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-box"><strong>Numeric Columns</strong><div>${globalData.overall.numericColumns.length || 0}</div></div>
+            <div class="stat-box"><strong>Numeric Values (total)</strong><div>${globalData.overall.overall_numeric_count}</div></div>
+            <div class="stat-box"><strong>Overall Mean</strong><div>${globalData.overall.overall_mean === null ? 'N/A' : (Math.round(globalData.overall.overall_mean*100)/100)}</div></div>
+            <div class="stat-box"><strong>Overall Median</strong><div>${globalData.overall.overall_median === null ? 'N/A' : (Math.round(globalData.overall.overall_median*100)/100)}</div></div>
+            <div class="stat-box"><strong>Overall Std Dev</strong><div>${globalData.overall.overall_std === null ? 'N/A' : (Math.round(globalData.overall.overall_std*100)/100)}</div></div>
+        </div>
+    `;
+}
+
+/* Populate selectors */
+function populateColumnSelectors() {
+    const colSelect = document.getElementById('columnSelect');
+    const colSelectY = document.getElementById('columnSelectY');
+    colSelect.innerHTML = '';
+    colSelectY.innerHTML = '';
+    for (const h of globalData.headers) {
+        const opt = `<option value="${h}">${h} ${globalData.colTypes[h] === 'numeric' ? ' (num)' : ''}</option>`;
+        colSelect.insertAdjacentHTML('beforeend', opt);
+        colSelectY.insertAdjacentHTML('beforeend', opt);
+    }
+    if (globalData.headers.length) {
+        colSelect.value = globalData.headers[0];
+        colSelectY.value = globalData.headers.length > 1 ? globalData.headers[1] : globalData.headers[0];
+    }
+}
+
+/* Handle plot type change (show/hide Y selector) */
+function onPlotTypeChange() {
+    const type = document.getElementById('plotTypeSelect').value;
+    const labelY = document.getElementById('labelY');
+    const colY = document.getElementById('columnSelectY');
+    if (type === 'scatter' || type === 'qq') {
+        labelY.style.display = type === 'scatter' ? '' : 'none';
+        colY.style.display = type === 'scatter' ? '' : 'none';
+        if (type === 'qq') {
+            // For Q-Q we use single selected numeric column as X.
+            labelY.style.display = 'none'; colY.style.display = 'none';
+        }
+    } else {
+        labelY.style.display = 'none'; colY.style.display = 'none';
+    }
+}
+
+/* Render the selected plot */
+function renderPlot() {
+    const type = document.getElementById('plotTypeSelect').value;
+    const col = document.getElementById('columnSelect').value;
+    const colY = document.getElementById('columnSelectY').value;
+    const plotArea = document.getElementById('plotArea');
+    const heatmapContainer = document.getElementById('heatmapContainer');
+    const heatmapLegend = document.getElementById('heatmapLegend');
+
+    // Clean micro UI
+    heatmapContainer.style.display = 'none';
+    heatmapContainer.innerHTML = '';
+    heatmapLegend.style.display = 'none';
+
+    if (!col || globalData.headers.length === 0) return;
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+    // Helpers for Chart.js dataset config
+    const primaryColor = 'rgba(33,145,123,0.85)';
+    const primaryFill = 'rgba(33,145,123,0.35)';
+
+    if (type === 'bar' || type === 'line') {
+        // For categorical columns, show distribution
+        if (globalData.colTypes[col] === 'numeric') {
+            // For numeric show binned histogram instead (user likely wants that)
+            renderHistogramForColumn(col);
+            return;
+        }
+        const dist = globalData.plotData[col] || [];
+        const labels = dist.map(d => d.category);
+        const counts = dist.map(d => d.count);
+        chartInstance = new Chart(document.getElementById('myChart').getContext('2d'), {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: `Count of ${col}`,
+                    data: counts,
+                    backgroundColor: primaryFill,
+                    borderColor: primaryColor,
+                    borderWidth: 1,
+                    fill: type === 'line' ? false : true,
+                    tension: 0.2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero:true },
+                    x: { ticks: { autoSkip: labels.length > 20, maxRotation: 45, minRotation: 0 } }
                 }
-            };
-
-            if (plotType === 'bar') {
-                datasetConfig.backgroundColor = primaryChartColorAlpha;
-                datasetConfig.pointRadius = 0; 
-            } else if (plotType === 'line' || plotType === 'scatter') {
-                datasetConfig.backgroundColor = primaryChartColor; 
-                datasetConfig.fill = false;
-                datasetConfig.pointRadius = 5;
-                // Scatter/Line will plot COUNT vs CATEGORY here (using the distribution data)
             }
-            // --- End Core Dataset Configuration ---
+        });
+        return;
+    }
 
-            myChart = new Chart(ctx, {
-                type: plotType === 'scatter' ? 'bar' : plotType, // Fallback scatter to bar since we only have 1D data
-                data: {
-                    labels: labels,
-                    datasets: [datasetConfig]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { 
-                            beginAtZero: true,
-                            title: { display: true, text: 'Count' },
-                            grid: { color: 'rgba(0, 0, 0, 0.1)' }, 
-                            ticks: { color: 'var(--text)' } 
-                        },
-                        x: {
-                            title: { display: true, text: column },
-                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
-                            ticks: { color: 'var(--text)' }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            labels: { color: 'var(--text)' }
-                        }
+    if (type === 'hist') {
+        renderHistogramForColumn(col);
+        return;
+    }
+
+    if (type === 'scatter') {
+        // Need two numeric columns
+        if (!colY) { showMessageOnCanvas('Select a Y column for scatter plot.'); return; }
+        if (globalData.colTypes[col] !== 'numeric' || globalData.colTypes[colY] !== 'numeric') {
+            showMessageOnCanvas('Scatter requires two numeric columns.'); return;
+        }
+        const xArr = globalData.numericCache[col];
+        const yArr = globalData.numericCache[colY];
+        // build paired points (use same length by index where both are numbers)
+        const points = [];
+        const rows = globalData.rows;
+        for (let i=0;i<rows.length;i++) {
+            const xv = toNumberSafe(rows[i][col]);
+            const yv = toNumberSafe(rows[i][colY]);
+            if (!isNaN(xv) && !isNaN(yv)) points.push({ x: xv, y: yv });
+        }
+        if (!points.length) { showMessageOnCanvas('No paired numeric data to plot.'); return; }
+        chartInstance = new Chart(document.getElementById('myChart').getContext('2d'), {
+            type: 'scatter',
+            data: { datasets: [{ label: `${col} vs ${colY}`, data: points, pointRadius: 4, borderColor: primaryColor, backgroundColor: primaryColor }]},
+            options: { responsive:true, maintainAspectRatio:false, scales: { x: { title:{display:true,text:col} }, y:{ title:{display:true,text:colY} } } }
+        });
+        return;
+    }
+
+    if (type === 'qq') {
+        // Single numeric column
+        if (globalData.colTypes[col] !== 'numeric') { showMessageOnCanvas('Q–Q plot requires a numeric column.'); return; }
+        const arr = globalData.numericCache[col].slice().sort((a,b)=>a-b);
+        if (!arr.length) { showMessageOnCanvas('No numeric data'); return; }
+        // compute sample quantiles and theoretical normal quantiles for same probabilities
+        const n = arr.length;
+        const probs = arr.map((_, i) => (i + 0.5) / n);
+        const theo = probs.map(p => normalQuantile(p));
+        const points = probs.map((p,i) => ({ x: theo[i], y: arr[i] }));
+        chartInstance = new Chart(document.getElementById('myChart').getContext('2d'), {
+            type: 'scatter',
+            data: { datasets: [{ label: `Q–Q: ${col} vs Normal`, data: points, pointRadius: 3, borderColor: primaryColor, backgroundColor: primaryColor }]},
+            options: {
+                responsive:true, maintainAspectRatio:false,
+                plugins: { legend: { display: true } },
+                scales: { x: { title:{display:true, text:'Theoretical Normal Quantiles'} }, y: { title:{display:true, text:`Sample Quantiles (${col})`} } }
+            }
+        });
+        return;
+    }
+
+    if (type === 'corr') {
+        // compute correlation matrix for numeric columns
+        const numericCols = globalData.headers.filter(h => globalData.colTypes[h] === 'numeric');
+        if (!numericCols.length) { showMessageOnCanvas('No numeric columns for correlation matrix.'); return; }
+
+        // build matrix
+        const matrix = [];
+        for (let i=0;i<numericCols.length;i++) {
+            matrix[i] = [];
+            for (let j=0;j<numericCols.length;j++) {
+                const xi = globalData.numericCache[numericCols[i]];
+                const yj = globalData.numericCache[numericCols[j]];
+                // align lengths by index by scanning rows and collecting pairs where both valid
+                const pairsX = [];
+                const pairsY = [];
+                for (const row of globalData.rows) {
+                    const xv = toNumberSafe(row[numericCols[i]]);
+                    const yv = toNumberSafe(row[numericCols[j]]);
+                    if (!isNaN(xv) && !isNaN(yv)) {
+                        pairsX.push(xv); pairsY.push(yv);
                     }
                 }
-            });
+                const val = pairsX.length ? pearson(pairsX, pairsY) : NaN;
+                matrix[i][j] = val;
+            }
         }
-    });
-</script>
 
+        // Render a simple color-coded grid (HTML) because Chart.js matrix plugin not included
+        const heatmapContainer = document.getElementById('heatmapContainer');
+        heatmapContainer.innerHTML = '';
+        heatmapContainer.style.display = 'block';
+        document.getElementById('heatmapLegend').style.display = 'block';
+        // create grid
+        const grid = document.createElement('div');
+        grid.className = 'heatmap-grid';
+        // columns style
+        grid.style.gridTemplateColumns = `repeat(${numericCols.length}, minmax(120px, 1fr))`;
+        const maxAbs = 1.0;
+        // header row (col names)
+        for (let j=0;j<numericCols.length;j++) {
+            const headerCell = document.createElement('div');
+            headerCell.style.background = 'transparent';
+            headerCell.style.color = 'var(--muted)';
+            headerCell.style.fontWeight = '700';
+            headerCell.innerText = numericCols[j];
+            grid.appendChild(headerCell);
+        }
+        // cells
+        for (let i=0;i<numericCols.length;i++) {
+            for (let j=0;j<numericCols.length;j++) {
+                const v = matrix[i][j];
+                const cell = document.createElement('div');
+                cell.className = 'heatmap-cell';
+                const valText = (v === undefined || Number.isNaN(v)) ? 'N/A' : (Math.round(v*100)/100).toString();
+                // color mapping: -1 -> red, 0 -> neutral, +1 -> green
+                let r=200, g=200, b=200;
+                if (!isNaN(v)) {
+                    if (v >= 0) {
+                        // 0..1 -> neutral to green
+                        const ratio = Math.min(1, Math.abs(v));
+                        r = Math.round(200 - (180 * ratio));
+                        g = Math.round(200 + (55 * ratio));
+                        b = Math.round(200 - (120 * ratio));
+                    } else {
+                        // negative -> neutral to red
+                        const ratio = Math.min(1, Math.abs(v));
+                        r = Math.round(200 + (55 * ratio));
+                        g = Math.round(200 - (160 * ratio));
+                        b = Math.round(200 - (160 * ratio));
+                    }
+                }
+                cell.style.background = `rgb(${r},${g},${b})`;
+                cell.style.color = (Math.abs(v) > 0.5 ? '#fff' : '#111');
+                cell.innerText = valText;
+                grid.appendChild(cell);
+            }
+        }
+        heatmapContainer.appendChild(grid);
+
+        // keep canvas blank with note
+        showMessageOnCanvas('Correlation matrix rendered below as a heatmap. See table for values.');
+        return;
+    }
+}
+
+/* Shows a message in the canvas instead of a chart */
+function showMessageOnCanvas(msg) {
+    const ctx = document.getElementById('myChart').getContext('2d');
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.font = "14px Poppins";
+    ctx.fillStyle = "var(--muted)";
+    wrapText(ctx, msg, 12, 40, ctx.canvas.width - 24, 20);
+}
+
+/* Utility to wrap text in canvas */
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
+    let line = '';
+    for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+            ctx.fillText(line, x, y);
+            line = words[n] + ' ';
+            y += lineHeight;
+        } else {
+            line = testLine;
+        }
+    }
+    ctx.fillText(line, x, y);
+}
+
+/* Histogram rendering with binning */
+function renderHistogramForColumn(col) {
+    if (globalData.colTypes[col] !== 'numeric') {
+        showMessageOnCanvas('Histogram requires numeric column. For categorical distributions use Bar/Line.');
+        return;
+    }
+    const arr = globalData.numericCache[col].slice();
+    if (!arr.length) { showMessageOnCanvas('No numeric values'); return; }
+    // simple Freedman–Diaconis bin width
+    const q25 = quantile(arr, 0.25);
+    const q75 = quantile(arr, 0.75);
+    const iqr = q75 - q25 || (max(arr)-min(arr) || 1);
+    const binWidth = Math.max( (2 * iqr) / Math.cbrt(arr.length), (max(arr)-min(arr)) / 10 );
+    const bins = Math.max(6, Math.round((max(arr)-min(arr)) / binWidth));
+    const minVal = min(arr), maxVal = max(arr);
+    const binCounts = new Array(bins).fill(0);
+    const labels = new Array(bins).fill('');
+    for (const v of arr) {
+        const idx = Math.min(bins-1, Math.floor((v - minVal) / (maxVal - minVal + 1e-12) * bins));
+        binCounts[idx] += 1;
+    }
+    for (let i=0;i<bins;i++) {
+        const a = minVal + (i)*(maxVal - minVal)/bins;
+        const b = minVal + (i+1)*(maxVal - minVal)/bins;
+        labels[i] = `${roundSmart(a)} – ${roundSmart(b)}`;
+    }
+    chartInstance = new Chart(document.getElementById('myChart').getContext('2d'), {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: `Histogram of ${col}`, data: binCounts, backgroundColor: 'rgba(33,145,123,0.4)', borderColor: 'rgba(33,145,123,0.9)', borderWidth: 1 }]},
+        options: { responsive:true, maintainAspectRatio:false, scales: { y: { beginAtZero:true }, x: { ticks: { autoSkip: false } } } }
+    });
+}
+
+/* small helper */
+function roundSmart(v){ if (v===null || v===undefined || isNaN(v)) return 'N/A'; if (Math.abs(v) < 1) return Number(v.toPrecision(4)); return Math.round(v*100)/100; }
+
+/* =========================
+   Init: bind a drag-drop and sample dataset note
+   ========================= */
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Nothing else needed — analyzeData is triggered by button as before.
+    // But let's gracefully show helpful hint if no file loaded
+    const fileInput = document.getElementById('csvFileInput');
+    fileInput.addEventListener('change', () => {
+        // Auto clear previous chart & stats if new file selected
+        // (analyzeData will update on button press)
+    });
+});
+</script>
 </body>
 </html>
