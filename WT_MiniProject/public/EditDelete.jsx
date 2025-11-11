@@ -16,7 +16,7 @@ const theme = {
     shadow: 'rgba(33,145,123,0.12)',
 };
 
-// Main card styling
+// Card style
 const Card = {
     background: theme.card,
     borderRadius: theme.round,
@@ -27,7 +27,6 @@ const Card = {
     margin: '30px auto',
 };
 
-// Row for key-value fields
 const DetailRow = {
     display: 'flex',
     justifyContent: 'space-between',
@@ -35,7 +34,6 @@ const DetailRow = {
     borderBottom: '1px dashed rgba(0,0,0,0.1)',
     alignItems: 'center',
 };
-
 const DetailLabel = { color: theme.muted, fontWeight: '400', flexBasis: '40%' };
 const DetailValue = { color: theme.text, fontWeight: '600', textAlign: 'right', flexBasis: '60%' };
 
@@ -49,13 +47,11 @@ const SectionTitle = {
     fontWeight: '700',
 };
 
-// --- NEW FIXED BUTTON COMPONENT ---
-const ActionButton = ({ onClick, children, className, style = {}, type = "button", disabled }) => (
+const ActionButton = ({ onClick, children, type = "button", style = {}, disabled }) => (
     <button
         type={type}
         onClick={onClick}
         disabled={disabled}
-        className={className}
         style={{
             ...style,
             display: 'flex',
@@ -66,21 +62,22 @@ const ActionButton = ({ onClick, children, className, style = {}, type = "button
             padding: '14px 28px',
             borderRadius: theme.round,
             cursor: 'pointer',
-            minWidth: '170px',
+            minWidth: '180px',
+            height: '50px',
             textAlign: 'center',
             border: 'none',
+            transition: '0.25s ease',
         }}
     >
         {children}
     </button>
 );
-// -------------------------------------------------------------
 
 const formatValue = (value, prefix = '', suffix = '') =>
     value ? `${prefix}${value}${suffix}` : 'N/A';
 
-// Role → Fields list
-const getRoleConfig = (userRoleKey) => ({
+// Field display config (unchanged)
+const getRoleConfig = (role) => ({
     'analyst - agency': [
         { label: 'Agency Name', key: 'name' },
         { label: 'Website', key: 'website' },
@@ -115,7 +112,7 @@ const getRoleConfig = (userRoleKey) => ({
         { label: 'Organization Name', key: 'name' },
         { label: 'Industry', key: 'industry' },
         { label: 'Service Required', key: 'service' },
-        { label: 'Budget Estimate', key: 'budget', format: (val) => formatValue(val, '$', ' USD') },
+        { label: 'Budget Estimate', key: 'budget', format: val => formatValue(val, '$', ' USD') },
         { label: 'Legal/Compliance Notes', key: 'legal' },
         { label: 'Estimated Data Size', key: 'data_size' },
     ],
@@ -127,11 +124,17 @@ const getRoleConfig = (userRoleKey) => ({
         { label: 'Legal', key: 'legal' },
         { label: 'Estimated Data Size', key: 'data_size' },
     ],
-}[userRoleKey] || []);
+}[role] || []);
 
-// ---------------------------------------------------------
-// PROFILE VIEW
-// ---------------------------------------------------------
+const editableFieldsByRole = {
+    "analyst - agency": ["name", "contact", "email", "website", "service", "specialization", "pricing", "legal", "credibility", "years", "about", "password"],
+    "analyst - startup": ["name", "contact", "email", "website", "service", "specialization", "pricing", "legal", "credibility", "team", "about", "password"],
+    "analyst - expert": ["name", "contact", "email", "portfolio", "service", "specialization", "pricing", "legal", "credibility", "timing", "about", "password"],
+    "enterprise - established": ["name", "contact", "email", "industry", "service", "budget", "legal", "data_size", "about", "password"],
+    "enterprise - growth-stage": ["name", "contact", "email", "industry", "service", "budget", "legal", "data_size", "about", "password"],
+};
+
+// ------------------ VIEW PROFILE ------------------
 const UserProfileView = ({ user, onEdit, onProfileUpdate, onBack }) => {
     const BackButton = window.BackButton;
     const [profile, setProfile] = useState(null);
@@ -182,12 +185,19 @@ const UserProfileView = ({ user, onEdit, onProfileUpdate, onBack }) => {
                 <div style={SectionTitle}>About</div>
                 <p>{profile.about || "No About section added."}</p>
 
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '40px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '25px', marginTop: '40px' }}>
                     <ActionButton onClick={() => onEdit(profile)} style={{ background: theme.primary, color: 'white' }}>
                         Edit Profile
                     </ActionButton>
-                    <ActionButton onClick={() => confirm("Delete profile?") && fetch(`http://localhost:5000/api/user/${userId}`, { method: 'DELETE' }).then(() => window.location.href = 'index.html')}
-                        style={{ background: '#ff4d4f', color: 'white' }}>
+
+                    <ActionButton
+                        onClick={() =>
+                            confirm("Delete profile?") &&
+                            fetch(`http://localhost:5000/api/user/${userId}`, { method: 'DELETE' })
+                                .then(() => window.location.href = 'index.html')
+                        }
+                        style={{ background: '#ff4d4f', color: 'white' }}
+                    >
                         Delete Profile
                     </ActionButton>
                 </div>
@@ -196,25 +206,45 @@ const UserProfileView = ({ user, onEdit, onProfileUpdate, onBack }) => {
     );
 };
 
-// ---------------------------------------------------------
-// PROFILE EDIT FORM
-// ---------------------------------------------------------
+// ------------------ EDIT PROFILE ------------------
 const UserProfileEdit = ({ profile, onSave, onCancel, onBack }) => {
     const BackButton = window.BackButton;
     const [formData, setFormData] = useState({ ...profile });
+    const [confirmPassword, setConfirmPassword] = useState("");
 
-    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    const allowedFields = editableFieldsByRole[profile.role.toLowerCase()] || [];
+
+    const handleChange = (e) =>
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    const passwordValid = (password) =>
+        /^(?=.*\d).{8,}$/.test(password); // >=8 chars + at least 1 number
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (formData.password) {
+            if (!passwordValid(formData.password)) {
+                alert("Password must be at least 8 characters long and include at least one number.");
+                return;
+            }
+            if (formData.password !== confirmPassword) {
+                alert("Passwords do not match.");
+                return;
+            }
+        }
+
         await fetch(`http://localhost:5000/api/user/${profile._id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData),
         });
+
         alert("Profile updated!");
         onSave();
     };
+
+    const labelCase = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
     return (
         <div style={{ padding: '20px' }}>
@@ -225,21 +255,42 @@ const UserProfileEdit = ({ profile, onSave, onCancel, onBack }) => {
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-grid" style={{ maxWidth: '800px', margin: '0 auto' }}>
-                        {Object.keys(formData).map((key) => (
-                            key !== "_id" && key !== "__v" && (
+                        {allowedFields.map((key) => (
+                            key !== "password" ? (
                                 <div key={key}>
-                                    <label>{key}</label>
+                                    <label>{labelCase(key)}</label>
                                     <input name={key} value={formData[key] || ''} onChange={handleChange} />
+                                </div>
+                            ) : (
+                                <div key={key}>
+                                    <label>Password</label>
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        placeholder="Enter new password"
+                                        value={formData.password || ''}
+                                        onChange={handleChange}
+                                    />
+                                    <small style={{ color: 'red' }}>Must be ≥ 8 characters and include at least one number.</small>
+
+                                    <label style={{ marginTop: '10px', display: 'block' }}>Confirm Password</label>
+                                    <input
+                                        type="password"
+                                        placeholder="Re-enter password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
                                 </div>
                             )
                         ))}
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '40px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '25px', marginTop: '40px' }}>
                         <ActionButton type="submit" style={{ background: theme.primary, color: 'white' }}>
                             Save Changes
                         </ActionButton>
-                        <ActionButton onClick={onCancel} style={{ background: '#cccccc' }}>
+
+                        <ActionButton onClick={onCancel} style={{ background: '#bfbfbf', color: '#000' }}>
                             Cancel
                         </ActionButton>
                     </div>
@@ -248,3 +299,4 @@ const UserProfileEdit = ({ profile, onSave, onCancel, onBack }) => {
         </div>
     );
 };
+    
