@@ -27,8 +27,8 @@ app.use(express.static(path.join(__dirname, '../public'), {
 // === MongoDB Connection ===
 mongoose
     .connect('mongodb://127.0.0.1:27017/scrutinyDB')
-    .then(() => console.log('✅ Connected to MongoDB'))
-    .catch((err) => console.error('❌ MongoDB connection error:', err));
+    .then(() => console.log('Connected to MongoDB'))
+    .catch((err) => console.error('MongoDB connection error:', err));
 
 // === SIGNUP ROUTE (Unchanged) ===
 app.post('/api/signup', async (req, res) => {
@@ -174,7 +174,8 @@ app.get('/api/user/:id', async (req, res) => {
     const userId = req.params.id;
 
     try {
-        const user = await User.findById(userId).select('-password -__v'); // Removed -createdAt
+        const user = await User.findById(userId).select('-password -__v');
+        
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found.' });
@@ -542,4 +543,4 @@ app.post('/api/analyze', upload.single('file'), (req, res) => {
 
 // === Start Server ===
 const PORT = 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));   
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));   

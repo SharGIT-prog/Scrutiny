@@ -1,9 +1,10 @@
 const { useState, useEffect } = React;
-
+/*
 // Dark mode pre-load
 if (localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark-mode');
 }
+*/
 
 const theme = {
     primary: '#21917b',

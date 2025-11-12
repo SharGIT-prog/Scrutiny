@@ -1,8 +1,3 @@
-// PART A FIX: Helper to apply dark mode class before React loads
-if (localStorage.getItem('theme') === 'dark') {
-    document.body.classList.add('dark-mode');
-}
-
 const { useState, useCallback, useMemo } = React;
 
 const AdvancedSearchFilter = ({ onFilterChange, oppositeRole }) => {
@@ -29,12 +24,12 @@ const AdvancedSearchFilter = ({ onFilterChange, oppositeRole }) => {
         const AnalystSubRoles = [
             { key: 'Analyst - Agency', label: 'Data Solutions Agency', fields: [
                 { key: 'legal', label: 'Legal Entity', type: 'dropdown', options: ['LLC', 'Pvt', 'Pvt Ltd'] },
-                { key: 'years', label: 'Min Years in Operation', type: 'number_min' },
+                { key: 'years', label: 'Min Years in Operation', type: 'number_min' }, // Key is 'years', type is 'number_min'
                 { key: 'pricing', label: 'Pricing Model', type: 'dropdown', options: ['Hourly', 'Fixed', 'Project-Based'] },
                 { key: 'specialization', label: 'Specialization Field', type: 'text' },
             ]},
             { key: 'Analyst - Startup', label: 'Growth-stage Startup', fields: [
-                { key: 'team', label: 'Min Team Size', type: 'number_min' },
+                { key: 'team', label: 'Min Team Size', type: 'number_min' }, // Key is 'team', type is 'number_min'
                 { key: 'legal', label: 'Legal Status', type: 'dropdown', options: ['LLC', 'Pvt', 'Pvt Ltd'] },
                 { key: 'pricing', label: 'Pricing Model', type: 'dropdown', options: ['Hourly', 'Fixed', 'Subscription'] },
                 { key: 'specialization', label: 'Specialization Field', type: 'text' },
@@ -50,13 +45,13 @@ const AdvancedSearchFilter = ({ onFilterChange, oppositeRole }) => {
         const EnterpriseSubRoles = [
             { key: 'Enterprise - Established', label: 'Established Enterprise', fields: [
                 { key: 'industry', label: 'Industry', type: 'text' },
-                { key: 'budget', label: 'Min Budget ($)', type: 'number_min' },
+                { key: 'budget', label: 'Min Budget ($)', type: 'number_min' }, // Key is 'budget', type is 'number_min'
                 { key: 'data_size', label: 'Data Size/Volume', type: 'dropdown', options: ['Large', 'Medium', 'Small'] },
                 { key: 'legal', label: 'Legal/Compliance Notes', type: 'text' },
             ]},
             { key: 'Enterprise - Growth-stage', label: 'Growth-stage Company', fields: [
                 { key: 'industry', label: 'Industry', type: 'text' },
-                { key: 'budget', label: 'Min Budget ($)', type: 'number_min' },
+                { key: 'budget', label: 'Min Budget ($)', type: 'number_min' }, // Key is 'budget', type is 'number_min'
                 { key: 'legal', label: 'Legal Status', type: 'text' },
             ]},
         ];
@@ -92,16 +87,21 @@ const AdvancedSearchFilter = ({ onFilterChange, oppositeRole }) => {
 
         const queryParts = [`role=${encodeURIComponent(subRoleFilter)}`];
         
+        const fields = currentSubRoleConfig ? currentSubRoleConfig.fields : [];
+
         for (const key in specificFilters) {
             const value = specificFilters[key];
             if (value && value.toString().trim() !== '') {
-                // Special handling for minimum/range numbers
-                if (key.includes('number_min') || key.includes('budget')) {
+                // Find the field configuration to check its type
+                const fieldConfig = fields.find(f => f.key === key);
+                
+                // --- FIX APPLIED HERE ---
+                // The correct check is whether the field type is 'number_min'
+                if (fieldConfig && fieldConfig.type === 'number_min') {
                     // Mongoose filter keys used in server.js: years, team, budget
-                    const mongoKey = key.replace('_min', '');
-                    const finalKey = (mongoKey === 'budget' || mongoKey === 'years' || mongoKey === 'team') ? mongoKey : key; 
-
-                    queryParts.push(`${finalKey}_min=${encodeURIComponent(value)}`);
+                    // The keys are already correct ('years', 'team', 'budget')
+                    // We just need to append '_min' to the key for the server
+                    queryParts.push(`${key}_min=${encodeURIComponent(value)}`);
                 } else {
                     queryParts.push(`${key}=${encodeURIComponent(value)}`);
                 }
@@ -109,7 +109,7 @@ const AdvancedSearchFilter = ({ onFilterChange, oppositeRole }) => {
         }
         
         onFilterChange(queryParts.join('&'));
-    }, [subRoleFilter, specificFilters, onFilterChange]);
+    }, [subRoleFilter, specificFilters, onFilterChange, currentSubRoleConfig]); // Added currentSubRoleConfig to dependencies
 
     const handleClear = useCallback(() => {
         setSubRoleFilter('');

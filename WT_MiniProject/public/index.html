@@ -18,7 +18,7 @@
             padding: 40px 20px;
         }
         
-        /* --- FEATURE GRID STYLES --- */
+
         .feature-grid {
             max-width: 1100px;
             margin: 40px auto;
@@ -33,7 +33,7 @@
             margin-bottom: 60px;
         }
 
-        /* Alternating layout */
+
         .feature-item:nth-child(even) .feature-content:first-child {
             order: 2;
         }
@@ -41,7 +41,7 @@
             order: 1;
         }
 
-        /* Feature Card Styling with Hover Effect */
+
         .feature-card {
             background: var(--card);
             padding: 30px;
@@ -72,7 +72,6 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
 
-        /* Responsive adjustments */
         @media (max-width: 768px) {
             .feature-item {
                 grid-template-columns: 1fr; 
@@ -86,29 +85,28 @@
             }
         }
         
-        /* --- SUBTLE QUICKFIX STYLES --- */
-        /* Animation for a subtle pulse/float */
+        
         @keyframes subtle-pulse {
             0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
             50% { box-shadow: 0 0 0 6px rgba(255, 215, 0, 0); }
         }
 
         .quickfix-btn-subtle {
-            /* Keep original dimensions/font/color but modify background/border for emphasis */
-            background: #ebdf9b !important; /* Soft Gold Base */
+
+            background: #ebdf9b !important; 
             border: 1px solid #c18413 !important; 
-            color: var(--text) !important; /* Use theme text color for professionalism */
-            font-weight: 600 !important; /* Keep consistent with other buttons in style.css */
+            color: var(--text) !important;  
+            font-weight: 600 !important;
             
-            /* Add subtle pulse animation */
             animation: subtle-pulse 2s infinite ease-out;
-            transition: all 0.2s ease; /* Ensure quick hover response */
+            transition: all 0.2s ease; 
         }
         
         .quickfix-btn-subtle:hover {
-            background: #eea825 !important; /* Slightly deeper gold on hover */
-            color: #ffffff !important; /* White text for contrast on hover */
-            transform: translateY(-2px) !important; /* Inherits the standard nav hover lift */
+            background: #eea825 !important;  
+            color: #ffffff !important;  
+            transform: translateY(-2px) !important;  
+            
         }
     </style>
 </head>
