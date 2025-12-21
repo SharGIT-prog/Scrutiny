@@ -1,5 +1,5 @@
 IDEA
-A platform that connects clients needing data analysis with qualified analysts, helping both sides find the right match based on skills, expertise, availability, and budget. It also offers a Quick-Fix tool that provides instant basic analysis for well-organized CSV files.
+> A platform that connects clients needing data analysis with qualified analysts, helping both sides find the right match based on skills, expertise, availability, and budget. It also offers a Quick-Fix tool that provides instant basic analysis for well-organized CSV files.
 
 DESCRIPTION
 1. Connecting Service Providers and Service Receivers
